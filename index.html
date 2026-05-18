@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Engranajes Rectos — Módulos No Estándar</title>
+<style>
+  :root {
+    --bg: #f0f4f8;
+    --surface: #ffffff;
+    --surface2: #f8fafc;
+    --border: #e2e8f0;
+    --text: #1e293b;
+    --text-muted: #64748b;
+    --primary: #1d4ed8;
+    --primary-light: #dbeafe;
+    --success: #16a34a;
+    --success-bg: #dcfce7;
+    --danger: #dc2626;
+    --danger-bg: #fee2e2;
+    --warn: #d97706;
+    --warn-bg: #fef3c7;
+    --row-alt: #f8fafc;
+    --shadow: 0 2px 8px rgba(0,0,0,0.08);
+    --radius: 12px;
+  }
+  [data-theme="dark"] {
+    --bg: #0f172a;
+    --surface: #1e293b;
+    --surface2: #0f172a;
+    --border: #334155;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --primary: #3b82f6;
+    --primary-light: #1e3a5f;
+    --success: #4ade80;
+    --success-bg: #14532d;
+    --danger: #f87171;
+    --danger-bg: #7f1d1d;
+    --warn: #fbbf24;
+    --warn-bg: #78350f;
+    --row-alt: #1e293b;
+    --shadow: 0 2px 8px rgba(0,0,0,0.4);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    line-height: 1.6;
+    transition: background 0.3s, color 0.3s;
+  }
+  header {
+    background: var(--primary);
+    color: #fff;
+    padding: 1.25rem 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    flex-wrap: wrap;
+    gap: 0.75rem;
+  }
+  header h1 { font-size: 1.3rem; font-weight: 700; }
+  header p { font-size: 0.85rem; opacity: 0.85; }
+  .theme-btn {
+    background: rgba(255,255,255,0.2);
+    border: 1px solid rgba(255,255,255,0.4);
+    color: #fff;
+    padding: 0.4rem 0.9rem;
+    border-radius: 20px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: background 0.2s;
+    white-space: nowrap;
+  }
+  .theme-btn:hover { background: rgba(255,255,255,0.3); }
+  main {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem;
+    display: grid;
+    gap: 1.25rem;
+  }
+  .card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 1.25rem 1.5rem;
+    box-shadow: var(--shadow);
+  }
+  .card-title {
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--primary);
+    margin-bottom: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+  }
+  .card-title .icon { font-size: 1.2rem; }
+
+  /* CONTROLES */
+  .controls-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+  }
+  .input-group label {
+    display: block;
+    font-size: 0.8rem;
+    font-weight: 600;
+    color: var(--text-muted);
+    margin-bottom: 0.35rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+  }
+  .input-group input, .input-group select {
+    width: 100%;
+    padding: 0.55rem 0.75rem;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    font-size: 1rem;
+    background: var(--surface2);
+    color: var(--text);
+    transition: border-color 0.2s;
+  }
+  .input-group input:focus, .input-group select:focus {
+    outline: none;
+    border-color: var(--primary);
+  }
+  .input-sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+  .btn-row { display: flex; gap: 0.75rem; flex-wrap: wrap; margin-top: 1rem; }
+  .btn {
+    padding: 0.55rem 1.3rem;
+    border-radius: 8px;
+    border: none;
+    cursor: pointer;
+    font-size: 0.9rem;
+    font-weight: 600;
+    transition: opacity 0.2s, transform 0.1s;
+  }
+  .btn:active { transform: scale(0.97); }
+  .btn-primary { background: var(--primary); color: #fff; }
+  .btn-secondary { background: var(--border); color: var(--text); }
+  .btn:hover { opacity: 0.88; }
+
+  /* FÓRMULAS */
+  .formula-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 0.75rem;
+  }
+  .formula-box {
+    background: var(--primary-light);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 0.75rem 1rem;
+  }
+  .formula-name { font-size: 0.75rem; font-weight: 700; color: var(--primary); text-transform: uppercase; margin-bottom: 0.25rem; }
+  .formula-expr {
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    font-weight: 700;
+    color: var(--text);
+    margin-bottom: 0.2rem;
+  }
+  .formula-desc { font-size: 0.78rem; color: var(--text-muted); }
+
+  /* TABLAS */
+  .table-wrap { overflow-x: auto; border-radius: 8px; border: 1px solid var(--border); }
+  table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+  th {
+    background: var(--primary);
+    color: #fff;
+    padding: 0.65rem 1rem;
+    text-align: left;
+    font-weight: 600;
+    white-space: nowrap;
+  }
+  td { padding: 0.6rem 1rem; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  tr:last-child td { border-bottom: none; }
+  tr:nth-child(even) td { background: var(--row-alt); }
+  .td-param { font-weight: 600; white-space: nowrap; }
+  .td-formula { font-family: monospace; font-size: 0.82rem; color: var(--text-muted); }
+
+  /* ESTADO */
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.35rem;
+    padding: 0.25rem 0.7rem;
+    border-radius: 20px;
+    font-size: 0.82rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .badge-ok { background: var(--success-bg); color: var(--success); }
+  .badge-err { background: var(--danger-bg); color: var(--danger); }
+  .badge-warn { background: var(--warn-bg); color: var(--warn); }
+
+  /* DISTANCIA */
+  .dist-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 1rem;
+    margin-bottom: 1rem;
+  }
+  .dist-box {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 0.85rem 1rem;
+    text-align: center;
+  }
+  .dist-label { font-size: 0.75rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; margin-bottom: 0.3rem; }
+  .dist-value { font-size: 1.6rem; font-weight: 800; color: var(--primary); }
+  .dist-unit { font-size: 0.75rem; color: var(--text-muted); }
+
+  /* COMPATIBILIDAD */
+  .compat-banner {
+    border-radius: 10px;
+    padding: 1rem 1.25rem;
+    display: flex;
+    align-items: flex-start;
+    gap: 0.85rem;
+    font-size: 0.92rem;
+    border: 2px solid transparent;
+    transition: background 0.3s, border-color 0.3s;
+  }
+  .compat-banner .compat-icon { font-size: 1.8rem; line-height: 1; flex-shrink: 0; }
+  .compat-banner p { margin-top: 0.3rem; color: var(--text-muted); font-size: 0.86rem; }
+
+  /* GRÁFICO SVG */
+  #gear-svg-wrap {
+    width: 100%;
+    overflow: hidden;
+    background: var(--surface2);
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 220px;
+    padding: 0.5rem;
+  }
+  #gear-svg { width: 100%; max-width: 700px; }
+
+  /* EJEMPLOS */
+  .ex-cases { display: grid; gap: 0.75rem; }
+  .ex-case {
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    transition: border-color 0.2s;
+    cursor: pointer;
+  }
+  .ex-case:hover { border-color: var(--primary); }
+  .ex-case.active { border-color: var(--primary); }
+  .ex-header {
+    padding: 0.6rem 1rem;
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    background: var(--surface2);
+  }
+  .ex-title { font-weight: 700; font-size: 0.9rem; flex: 1; min-width: 150px; }
+  .ex-body { padding: 0.75rem 1rem; }
+  .ex-params { display: flex; flex-wrap: wrap; gap: 0.5rem 1.5rem; font-size: 0.85rem; }
+  .ex-param-item { white-space: nowrap; }
+  .ex-param-item span { font-weight: 700; }
+
+  /* EXPLICACIÓN */
+  .explain-box {
+    background: var(--warn-bg);
+    border-left: 4px solid var(--warn);
+    border-radius: 0 8px 8px 0;
+    padding: 0.85rem 1rem;
+    font-size: 0.88rem;
+    margin-top: 0.75rem;
+  }
+  .explain-box strong { color: var(--warn); }
+
+  /* RATIO */
+  .ratio-display {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--primary);
+    text-align: center;
+    margin: 0.5rem 0;
+  }
+
+  /* COLLAPSIBLE */
+  .collapsible-header {
+    cursor: pointer;
+    user-select: none;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .collapsible-header .chev {
+    font-size: 0.9rem;
+    transition: transform 0.2s ease;
+    color: var(--text-muted);
+    margin-left: 0.5rem;
+  }
+  .collapsible-header.collapsed .chev { transform: rotate(-90deg); }
+  .collapsible-body.collapsed { display: none; }
+
+  /* SISTEMAS A / B */
+  .system-block {
+    border: 2px solid var(--border);
+    border-radius: 10px;
+    padding: 0.75rem 1rem 1rem;
+    margin-top: 0.85rem;
+  }
+  .system-block.sys-a { border-color: #3b82f6; }
+  .system-block.sys-b { border-color: #10b981; }
+  .system-tag {
+    display: inline-block;
+    padding: 0.15rem 0.6rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.05em;
+    margin-bottom: 0.75rem;
+  }
+  .system-tag.sys-a { background: #dbeafe; color: #1d4ed8; }
+  .system-tag.sys-b { background: #d1fae5; color: #065f46; }
+  [data-theme="dark"] .system-tag.sys-a { background: #1e3a5f; color: #93c5fd; }
+  [data-theme="dark"] .system-tag.sys-b { background: #064e3b; color: #6ee7b7; }
+  .system-toggle {
+    display: flex;
+    align-items: center;
+    gap: 0.6rem;
+    padding: 0.6rem 0.85rem;
+    background: var(--surface2);
+    border: 1px dashed var(--border);
+    border-radius: 8px;
+    cursor: pointer;
+    user-select: none;
+    margin-bottom: 0.5rem;
+  }
+  .system-toggle input { width: 1.1rem; height: 1.1rem; }
+
+  /* Cabeceras de grupo en la tabla de resultados */
+  th.group-a { background: #1d4ed8; }
+  th.group-b { background: #059669; }
+
+  @media (max-width: 600px) {
+    header { padding: 1rem; }
+    header h1 { font-size: 1.1rem; }
+    main { padding: 1rem 0.5rem; }
+    .card { padding: 1rem; }
+    th, td { padding: 0.5rem 0.6rem; font-size: 0.82rem; }
+    .dist-value { font-size: 1.3rem; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>⚙️ Engranajes Rectos — Módulos No Estándar</h1>
+    <p>Herramienta interactiva de análisis de compatibilidad entre engranajes</p>
+  </div>
+  <button class="theme-btn" onclick="toggleTheme()">🌙 Modo oscuro</button>
+</header>
+
+<main>
+
+  <!-- CONTROLES -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔧</span> Parámetros de Entrada</div>
+
+    <div class="system-block sys-a">
+      <span class="system-tag sys-a">SISTEMA A</span>
+      <div class="controls-grid">
+        <div class="input-group">
+          <label>Módulo Piñón (m₁)</label>
+          <input type="number" id="m1" value="30" min="0.1" step="0.01" oninput="onFieldEdit('m1')">
+          <div class="input-sub">DP₁ se recalcula</div>
+        </div>
+        <div class="input-group">
+          <label>Dientes Piñón (Z₁)</label>
+          <input type="number" id="z1" value="33" min="5" step="1" oninput="onFieldEdit('z1')">
+          <div class="input-sub">DP₁ se recalcula</div>
+        </div>
+        <div class="input-group">
+          <label>DP Piñón (mm)</label>
+          <input type="number" id="dp1" value="990" min="1" step="0.01" oninput="onFieldEdit('dp1')">
+          <div class="input-sub">Recalcula m₁ = DP₁/Z₁</div>
+        </div>
+        <div class="input-group">
+          <label>Módulo Corona (m₂)</label>
+          <input type="number" id="m2" value="30" min="0.1" step="0.01" oninput="onFieldEdit('m2')">
+          <div class="input-sub">DP₂ se recalcula</div>
+        </div>
+        <div class="input-group">
+          <label>Dientes Corona (Z₂)</label>
+          <input type="number" id="z2" value="238" min="5" step="1" oninput="onFieldEdit('z2')">
+          <div class="input-sub">
+            <button onclick="setZ2(238)" style="padding:2px 8px;font-size:0.75rem;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text)">238</button>
+            <button onclick="setZ2(240)" style="padding:2px 8px;font-size:0.75rem;cursor:pointer;border:1px solid var(--border);border-radius:4px;background:var(--surface2);color:var(--text)">240</button>
+          </div>
+        </div>
+        <div class="input-group">
+          <label>DP Corona (mm)</label>
+          <input type="number" id="dp2" value="7140" min="1" step="0.01" oninput="onFieldEdit('dp2')">
+          <div class="input-sub">Recalcula m₂ = DP₂/Z₂</div>
+        </div>
+      </div>
+    </div>
+
+    <label class="system-toggle" style="margin-top:1rem;">
+      <input type="checkbox" id="enable-b" onchange="toggleSystemB()">
+      <span><strong>🔁 Activar Sistema B para comparar en la tabla de resultados</strong></span>
+    </label>
+
+    <div class="system-block sys-b" id="sys-b-block" style="display:none;">
+      <span class="system-tag sys-b">SISTEMA B</span>
+      <div class="controls-grid">
+        <div class="input-group">
+          <label>Módulo Piñón (m₁ᵦ)</label>
+          <input type="number" id="m1B" value="30" min="0.1" step="0.01" oninput="onFieldEdit('m1B')">
+        </div>
+        <div class="input-group">
+          <label>Dientes Piñón (Z₁ᵦ)</label>
+          <input type="number" id="z1B" value="33" min="5" step="1" oninput="onFieldEdit('z1B')">
+        </div>
+        <div class="input-group">
+          <label>DP Piñón B (mm)</label>
+          <input type="number" id="dp1B" value="990" min="1" step="0.01" oninput="onFieldEdit('dp1B')">
+        </div>
+        <div class="input-group">
+          <label>Módulo Corona (m₂ᵦ)</label>
+          <input type="number" id="m2B" value="29.82" min="0.1" step="0.01" oninput="onFieldEdit('m2B')">
+        </div>
+        <div class="input-group">
+          <label>Dientes Corona (Z₂ᵦ)</label>
+          <input type="number" id="z2B" value="240" min="5" step="1" oninput="onFieldEdit('z2B')">
+        </div>
+        <div class="input-group">
+          <label>DP Corona B (mm)</label>
+          <input type="number" id="dp2B" value="7156.8" min="1" step="0.01" oninput="onFieldEdit('dp2B')">
+        </div>
+      </div>
+    </div>
+
+    <div class="input-group" style="margin-top: 1rem;">
+      <label>C original de referencia (mm) — sólo para comparar</label>
+      <input type="number" id="cref" value="4065" step="0.1" oninput="calc()">
+      <div class="input-sub">La C real se calcula automáticamente como (DP₁+DP₂)/2.</div>
+    </div>
+    <div class="input-group" style="grid-column: 1 / -1; margin-top: 0.5rem;">
+      <label>Nombre del escenario actual (opcional)</label>
+      <input type="text" id="scen-name" placeholder="Ej: Diseño A, prueba +2 dientes...">
+    </div>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="saveScenario()">💾 Guardar escenario en comparativa</button>
+      <button class="btn btn-secondary" onclick="restore()">↩ Restaurar valores originales</button>
+      <button class="btn btn-secondary" onclick="clearScenarios()">🗑️ Vaciar comparativa</button>
+    </div>
+  </div>
+
+  <!-- COMPARATIVA DE ESCENARIOS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📚</span> Comparativa de Escenarios Guardados</div>
+    <div id="scen-empty" style="text-align:center;padding:1rem;color:var(--text-muted);font-size:0.9rem;">
+      Aún no hay escenarios guardados. Configura los parámetros arriba y pulsa <strong>Guardar escenario</strong>.
+    </div>
+    <div class="table-wrap" id="scen-wrap" style="display:none;">
+      <table>
+        <thead>
+          <tr>
+            <th title="Seleccionar para comparar">✓</th>
+            <th>#</th>
+            <th>Nombre</th>
+            <th>m₁</th>
+            <th>m₂</th>
+            <th>Z₁</th>
+            <th>Z₂</th>
+            <th>DP₁ (mm)</th>
+            <th>DP₂ (mm)</th>
+            <th>p₁ (mm)</th>
+            <th>p₂ (mm)</th>
+            <th>Δp (mm)</th>
+            <th>C (mm)</th>
+            <th>|ΔC| (mm)</th>
+            <th>i = Z₂/Z₁</th>
+            <th>Compatibilidad</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="scen-tbody"></tbody>
+      </table>
+    </div>
+    <div id="scen-summary" style="margin-top:0.85rem;display:none;">
+      <div class="explain-box" style="background:var(--primary-light);border-color:var(--primary);">
+        <strong style="color:var(--primary);">Resumen comparativo:</strong>
+        <span id="scen-summary-text"></span>
+      </div>
+    </div>
+
+    <!-- Comparación detallada parámetro × escenario -->
+    <div id="detail-cmp" style="margin-top:1.25rem;display:none;">
+      <div class="card-title" style="font-size:0.95rem;">
+        <span class="icon">🔍</span> Comparación detallada
+        <span style="font-weight:normal;font-size:0.8rem;color:var(--text-muted);margin-left:0.5rem;">
+          (escenarios seleccionados con ✓)
+        </span>
+      </div>
+      <div class="table-wrap">
+        <table id="detail-cmp-table"></table>
+      </div>
+      <div id="detail-cmp-note" class="explain-box" style="margin-top:0.6rem;"></div>
+    </div>
+  </div>
+
+  <!-- FÓRMULAS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📐</span> Fórmulas Fundamentales</div>
+    <div class="formula-grid">
+      <div class="formula-box">
+        <div class="formula-name">Diámetro Primitivo</div>
+        <div class="formula-expr">DP = m × Z</div>
+        <div class="formula-desc">Diámetro del círculo de paso donde engranan los dientes</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Distancia entre Centros</div>
+        <div class="formula-expr">C = (DP₁ + DP₂) / 2</div>
+        <div class="formula-desc">Distancia entre los ejes de ambos engranajes</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Paso Circular</div>
+        <div class="formula-expr">p = π × m</div>
+        <div class="formula-desc">Longitud de arco entre dientes consecutivos en el círculo primitivo</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Relación de Transmisión</div>
+        <div class="formula-expr">i = Z₂ / Z₁</div>
+        <div class="formula-desc">Razón de velocidades angulares (reducción o multiplicación)</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Altura de Cabeza</div>
+        <div class="formula-expr">hₐ = m</div>
+        <div class="formula-desc">Parte del diente por encima del círculo primitivo</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Altura de Pie</div>
+        <div class="formula-expr">hf = 1.25 × m</div>
+        <div class="formula-desc">Parte del diente por debajo del círculo primitivo</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Diámetro Exterior</div>
+        <div class="formula-expr">De = DP + 2m</div>
+        <div class="formula-desc">Diámetro de la punta de los dientes (Da)</div>
+      </div>
+      <div class="formula-box">
+        <div class="formula-name">Diámetro de Raíz</div>
+        <div class="formula-expr">Dr = DP − 2.5m</div>
+        <div class="formula-desc">Diámetro en la base de los dientes (Df)</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TABLA DE RESULTADOS -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📊</span> Resultados por Engranaje</div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>Parámetro</th>
+            <th>Fórmula</th>
+            <th>Piñón</th>
+            <th>Corona</th>
+            <th>Diferencia / Estado</th>
+          </tr>
+        </thead>
+        <tbody id="results-tbody">
+        </tbody>
+      </table>
+    </div>
+    <div class="ratio-display" id="ratio-display"></div>
+  </div>
+
+  <!-- DISTANCIA ENTRE CENTROS -->
+  <div class="card">
+    <div class="card-title collapsible-header collapsed" onclick="toggleCollapse(this)">
+      <span><span class="icon">📏</span> Distancia entre Centros</span>
+      <span class="chev">▼</span>
+    </div>
+    <div class="collapsible-body collapsed">
+    <div class="dist-grid">
+      <div class="dist-box">
+        <div class="dist-label">C calculada</div>
+        <div class="dist-value" id="c-calc">—</div>
+        <div class="dist-unit">mm</div>
+      </div>
+      <div class="dist-box">
+        <div class="dist-label">C de referencia</div>
+        <div class="dist-value" id="c-ref-display">4065.00</div>
+        <div class="dist-unit">mm</div>
+      </div>
+      <div class="dist-box">
+        <div class="dist-label">Diferencia |ΔC|</div>
+        <div class="dist-value" id="c-diff">—</div>
+        <div class="dist-unit">mm</div>
+      </div>
+      <div class="dist-box">
+        <div class="dist-label">Estado</div>
+        <div id="c-status" style="margin-top:0.25rem;">—</div>
+      </div>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr><th>Fórmula aplicada</th><th>Cálculo</th><th>Resultado</th></tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td class="td-formula">C = (DP₁ + DP₂) / 2</td>
+            <td id="c-formula-row">—</td>
+            <td><strong id="c-result-td">—</strong></td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+    </div>
+  </div>
+
+  <!-- COMPATIBILIDAD -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🔗</span> Análisis de Compatibilidad</div>
+    <div id="compat-banner" class="compat-banner"></div>
+    <div class="table-wrap" style="margin-top:0.85rem;">
+      <table>
+        <thead>
+          <tr>
+            <th>Condición</th>
+            <th>Valor</th>
+            <th>Estado</th>
+          </tr>
+        </thead>
+        <tbody id="compat-tbody"></tbody>
+      </table>
+    </div>
+    <div class="explain-box" id="explain-box"></div>
+  </div>
+
+</main>
+
+<script>
+// ─── ESTADO ─────────────────────────────────────────────────────────────────
+let theme = 'light';
+let suspendSync = false; // evita bucles en la sincronización bidireccional
+
+function r2(v) { return Math.round(v * 100) / 100; }
+function fmt(v) { return r2(v).toFixed(2); }
+
+function getInputs() {
+  return {
+    // Sistema A
+    m1:  parseFloat(document.getElementById('m1').value)  || 0,
+    m2:  parseFloat(document.getElementById('m2').value)  || 0,
+    z1:  parseFloat(document.getElementById('z1').value)  || 0,
+    z2:  parseFloat(document.getElementById('z2').value)  || 0,
+    dp1: parseFloat(document.getElementById('dp1').value) || 0,
+    dp2: parseFloat(document.getElementById('dp2').value) || 0,
+    // Sistema B
+    m1B:  parseFloat(document.getElementById('m1B').value)  || 0,
+    m2B:  parseFloat(document.getElementById('m2B').value)  || 0,
+    z1B:  parseFloat(document.getElementById('z1B').value)  || 0,
+    z2B:  parseFloat(document.getElementById('z2B').value)  || 0,
+    dp1B: parseFloat(document.getElementById('dp1B').value) || 0,
+    dp2B: parseFloat(document.getElementById('dp2B').value) || 0,
+    // Ref
+    cref: parseFloat(document.getElementById('cref').value) || 0,
+    sysB: document.getElementById('enable-b').checked
+  };
+}
+
+function setVal(id, v) {
+  document.getElementById(id).value = r2(v);
+}
+
+// Sincroniza m, Z y DP cuando el usuario edita uno de ellos.
+// Regla: DP = m × Z.
+//  - Si edita m o Z → DP se recalcula
+//  - Si edita DP → m se recalcula como DP/Z (Z se conserva)
+function onFieldEdit(field) {
+  if (suspendSync) { calc(); return; }
+  suspendSync = true;
+  const v = getInputs();
+  switch (field) {
+    // Sistema A
+    case 'm1': case 'z1':
+      if (v.m1 > 0 && v.z1 > 0) setVal('dp1', v.m1 * v.z1);
+      break;
+    case 'dp1':
+      if (v.dp1 > 0 && v.z1 > 0) setVal('m1', v.dp1 / v.z1);
+      break;
+    case 'm2': case 'z2':
+      if (v.m2 > 0 && v.z2 > 0) setVal('dp2', v.m2 * v.z2);
+      break;
+    case 'dp2':
+      if (v.dp2 > 0 && v.z2 > 0) setVal('m2', v.dp2 / v.z2);
+      break;
+    // Sistema B
+    case 'm1B': case 'z1B':
+      if (v.m1B > 0 && v.z1B > 0) setVal('dp1B', v.m1B * v.z1B);
+      break;
+    case 'dp1B':
+      if (v.dp1B > 0 && v.z1B > 0) setVal('m1B', v.dp1B / v.z1B);
+      break;
+    case 'm2B': case 'z2B':
+      if (v.m2B > 0 && v.z2B > 0) setVal('dp2B', v.m2B * v.z2B);
+      break;
+    case 'dp2B':
+      if (v.dp2B > 0 && v.z2B > 0) setVal('m2B', v.dp2B / v.z2B);
+      break;
+  }
+  suspendSync = false;
+  calc();
+}
+
+function toggleSystemB() {
+  const on = document.getElementById('enable-b').checked;
+  document.getElementById('sys-b-block').style.display = on ? 'block' : 'none';
+  calc();
+}
+
+function toggleCollapse(header) {
+  header.classList.toggle('collapsed');
+  const body = header.parentElement.querySelector('.collapsible-body');
+  if (body) body.classList.toggle('collapsed');
+}
+
+function computeGear(m, z) {
+  const dp = m * z;
+  const p  = Math.PI * m;
+  const ha = m;
+  const hf = 1.25 * m;
+  const de = dp + 2 * m;
+  const dr = dp - 2.5 * m;
+  return { m, z, dp, p, ha, hf, de, dr };
+}
+
+// ─── TABLA DE RESULTADOS ─────────────────────────────────────────────────────
+function buildRowSpec(g1, g2) {
+  return [
+    { name: "Módulo (m)",            formula: "—",        getPin: g => g.m,  getCor: g => g.m  },
+    { name: "Dientes (Z)",           formula: "—",        getPin: g => g.z,  getCor: g => g.z  },
+    { name: "Diámetro Primitivo (DP)", formula: "m × Z",  getPin: g => g.dp, getCor: g => g.dp },
+    { name: "Paso Circular (p)",     formula: "π × m",    getPin: g => g.p,  getCor: g => g.p  },
+    { name: "Altura de Cabeza (hₐ)", formula: "m",        getPin: g => g.ha, getCor: g => g.ha },
+    { name: "Altura de Pie (hf)",    formula: "1.25 × m", getPin: g => g.hf, getCor: g => g.hf },
+    { name: "Diámetro Exterior (De)", formula: "DP + 2m", getPin: g => g.de, getCor: g => g.de },
+    { name: "Diámetro de Raíz (Dr)", formula: "DP − 2.5m",getPin: g => g.dr, getCor: g => g.dr },
+  ];
+}
+
+function renderResults(gA1, gA2, gB1, gB2) {
+  const table = document.getElementById('results-tbody').closest('table');
+  const tbody = document.getElementById('results-tbody');
+  const thead = table.querySelector('thead');
+  const sysB = !!gB1;
+
+  // Cabecera
+  if (sysB) {
+    thead.innerHTML = `
+      <tr>
+        <th rowspan="2">Parámetro</th>
+        <th rowspan="2">Fórmula</th>
+        <th colspan="2" class="group-a">Sistema A</th>
+        <th colspan="2" class="group-b">Sistema B</th>
+        <th rowspan="2">Δ A↔B</th>
+      </tr>
+      <tr>
+        <th class="group-a">Piñón</th>
+        <th class="group-a">Corona</th>
+        <th class="group-b">Piñón</th>
+        <th class="group-b">Corona</th>
+      </tr>`;
+  } else {
+    thead.innerHTML = `
+      <tr>
+        <th>Parámetro</th>
+        <th>Fórmula</th>
+        <th>Piñón</th>
+        <th>Corona</th>
+        <th>Diferencia / Estado</th>
+      </tr>`;
+  }
+
+  const rows = buildRowSpec(gA1, gA2);
+
+  tbody.innerHTML = rows.map(r => {
+    const aPin = r.getPin(gA1);
+    const aCor = r.getCor(gA2);
+    if (!sysB) {
+      // Modo simple: piñón vs corona del Sistema A
+      const dPC = Math.abs(aPin - aCor);
+      let estado;
+      if (r.name.startsWith("Dientes")) {
+        estado = `Z₂/Z₁ = ${fmt(gA2.z/gA1.z)}`;
+      } else if (r.name.startsWith("Paso")) {
+        estado = dPC < 0.01 ? badge('ok','✅ Iguales')
+               : dPC < 1    ? badge('warn',`⚠️ Δ = ${fmt(dPC)} mm`)
+                            : badge('err', `❌ Δ = ${fmt(dPC)} mm`);
+      } else if (r.name.startsWith("Módulo")) {
+        estado = dPC < 0.001 ? badge('ok','✅ Iguales')
+                             : badge('err', `❌ Δ = ${fmt(dPC)}`);
+      } else if (r.name.startsWith("Altura")) {
+        estado = dPC < 0.001 ? badge('ok','✅') : badge('warn',`Δ = ${fmt(dPC)} mm`);
+      } else {
+        estado = `Δ = ${fmt(dPC)} mm`;
+      }
+      return `<tr>
+        <td class="td-param">${r.name}</td>
+        <td class="td-formula">${r.formula}</td>
+        <td>${fmt(aPin)}</td>
+        <td>${fmt(aCor)}</td>
+        <td>${estado}</td>
+      </tr>`;
+    }
+    // Modo comparación A vs B
+    const bPin = r.getPin(gB1);
+    const bCor = r.getCor(gB2);
+    const dPin = Math.abs(aPin - bPin);
+    const dCor = Math.abs(aCor - bCor);
+    const samePin = dPin < 0.01;
+    const sameCor = dCor < 0.01;
+    let diffCell;
+    if (samePin && sameCor) {
+      diffCell = badge('ok', '✅ A = B');
+    } else {
+      const parts = [];
+      if (!samePin) parts.push(`P: ${fmt(dPin)}`);
+      if (!sameCor) parts.push(`C: ${fmt(dCor)}`);
+      diffCell = badge('warn', `⚠️ ${parts.join(' | ')}`);
+    }
+    return `<tr>
+      <td class="td-param">${r.name}</td>
+      <td class="td-formula">${r.formula}</td>
+      <td>${fmt(aPin)}</td>
+      <td>${fmt(aCor)}</td>
+      <td>${fmt(bPin)}</td>
+      <td>${fmt(bCor)}</td>
+      <td>${diffCell}</td>
+    </tr>`;
+  }).join('');
+
+  // Relación de transmisión
+  let ratioHtml = `Relación A: i = ${gA2.z}/${gA1.z} = ${fmt(gA2.z/gA1.z)} : 1`;
+  if (sysB) {
+    ratioHtml += ` &nbsp;|&nbsp; Relación B: i = ${gB2.z}/${gB1.z} = ${fmt(gB2.z/gB1.z)} : 1`;
+  }
+  document.getElementById('ratio-display').innerHTML = ratioHtml;
+}
+
+// ─── DISTANCIA ENTRE CENTROS ─────────────────────────────────────────────────
+function renderCenter(g1, g2, cref) {
+  const c = (g1.dp + g2.dp) / 2;
+  const diff = Math.abs(c - cref);
+  document.getElementById('c-calc').textContent = fmt(c);
+  document.getElementById('c-ref-display').textContent = fmt(cref);
+  document.getElementById('c-diff').textContent = fmt(diff);
+  document.getElementById('c-formula-row').textContent =
+    `(${fmt(g1.dp)} + ${fmt(g2.dp)}) / 2`;
+  document.getElementById('c-result-td').textContent = fmt(c) + ' mm';
+
+  let statusHtml;
+  if (diff < 0.1) {
+    statusHtml = badge('ok', '✅ Coincide');
+  } else if (diff <= 5) {
+    statusHtml = badge('warn', '⚠️ Cercana');
+  } else {
+    statusHtml = badge('err', '❌ No coincide');
+  }
+  document.getElementById('c-status').innerHTML = statusHtml;
+}
+
+// ─── COMPATIBILIDAD ──────────────────────────────────────────────────────────
+function renderCompat(g1, g2) {
+  const mEqual = Math.abs(g1.m - g2.m) < 0.001;
+  const pDiff  = Math.abs(g1.p - g2.p);
+  const pEqual = pDiff < 0.01;
+
+  // Banner principal
+  const banner = document.getElementById('compat-banner');
+  if (mEqual) {
+    banner.style.background = 'var(--success-bg)';
+    banner.style.borderColor = 'var(--success)';
+    banner.innerHTML = `
+      <span class="compat-icon">✅</span>
+      <div>
+        <strong style="color:var(--success);font-size:1rem;">COMPATIBLE — Módulos iguales (m₁ = m₂ = ${fmt(g1.m)})</strong>
+        <p>Los pasos circulares son idénticos (p = π × ${fmt(g1.m)} = ${fmt(g1.p)} mm). Los dientes encajan correctamente en todo el arco de acción.</p>
+      </div>`;
+  } else {
+    banner.style.background = 'var(--danger-bg)';
+    banner.style.borderColor = 'var(--danger)';
+    banner.innerHTML = `
+      <span class="compat-icon">❌</span>
+      <div>
+        <strong style="color:var(--danger);font-size:1rem;">INCOMPATIBLE — Módulos distintos (m₁ = ${fmt(g1.m)}, m₂ = ${fmt(g2.m)})</strong>
+        <p>Los pasos circulares difieren: p₁ = ${fmt(g1.p)} mm vs p₂ = ${fmt(g2.p)} mm. <strong>Diferencia: ${fmt(pDiff)} mm por diente.</strong></p>
+      </div>`;
+  }
+
+  // Tabla de condiciones
+  const rows = [
+    { cond: 'Módulos iguales (m₁ = m₂)', val: `${fmt(g1.m)} ${mEqual?'=':'≠'} ${fmt(g2.m)}`, ok: mEqual },
+    { cond: 'Paso circular igual (p₁ = p₂)', val: `${fmt(g1.p)} vs ${fmt(g2.p)} mm`, ok: pEqual },
+    { cond: 'Diferencia de paso |p₁ − p₂|', val: `${fmt(pDiff)} mm`, ok: pEqual, warn: !pEqual && pDiff < 1 },
+    { cond: 'Altura de cabeza compatible', val: `${fmt(g1.ha)} vs ${fmt(g2.ha)} mm`, ok: Math.abs(g1.ha-g2.ha)<0.001 },
+  ];
+  document.getElementById('compat-tbody').innerHTML = rows.map(r => `
+    <tr>
+      <td>${r.cond}</td>
+      <td><code>${r.val}</code></td>
+      <td>${r.ok ? badge('ok','✅ OK') : r.warn ? badge('warn','⚠️ Atención') : badge('err','❌ Falla')}</td>
+    </tr>
+  `).join('');
+
+  // Explicación
+  const eb = document.getElementById('explain-box');
+  if (mEqual) {
+    eb.style.background = 'var(--success-bg)';
+    eb.style.borderColor = 'var(--success)';
+    eb.innerHTML = `<strong>¿Por qué funciona?</strong> Para que dos engranajes rectos engranen correctamente, <strong>ambos deben tener el mismo módulo</strong>. El módulo define el tamaño del diente: su altura, grosor y el paso circular (arco entre dientes). Si m₁ = m₂, el diente del piñón cabe exactamente en el espacio del diente de la corona en cada punto de contacto.`;
+  } else {
+    const errAcum = pDiff * g2.z;
+    eb.style.background = 'var(--warn-bg)';
+    eb.style.borderColor = 'var(--warn)';
+    eb.innerHTML = `<strong>¿Por qué falla?</strong> El paso circular del piñón es p₁ = <strong>${fmt(g1.p)} mm</strong>, pero el de la corona es p₂ = <strong>${fmt(g2.p)} mm</strong>. Hay una diferencia de <strong>${fmt(pDiff)} mm por diente</strong>. En ${g2.z} dientes, el error acumulado sería <strong>${fmt(errAcum)} mm</strong> — los dientes se montarían encima de los otros causando interferencia, desgaste prematuro y posible rotura. No es posible compensar esta diferencia sólo con la distancia entre centros, ya que el <em>módulo define la geometría local del diente</em>, no sólo el diámetro global.`;
+  }
+}
+
+// ─── ESCENARIOS COMPARATIVOS ─────────────────────────────────────────────────
+const SCENARIOS = [];
+const SELECTED = new Set(); // índices seleccionados para comparación detallada
+
+function saveScenario() {
+  const v = getInputs();
+  const nameInput = document.getElementById('scen-name').value.trim();
+  const auto = `Escenario ${SCENARIOS.length + 1}`;
+  SCENARIOS.push({
+    name: nameInput || auto,
+    m1: v.m1, m2: v.m2, z1: v.z1, z2: v.z2, cref: v.cref
+  });
+  document.getElementById('scen-name').value = '';
+  renderScenarios();
+}
+
+function removeScenario(i) {
+  SCENARIOS.splice(i, 1);
+  SELECTED.clear(); // se invalidan los índices, mejor empezar de cero
+  renderScenarios();
+}
+
+function loadScenarioToInputs(i) {
+  const s = SCENARIOS[i];
+  suspendSync = true;
+  document.getElementById('m1').value = s.m1;
+  document.getElementById('m2').value = s.m2;
+  document.getElementById('z1').value = s.z1;
+  document.getElementById('z2').value = s.z2;
+  document.getElementById('dp1').value = r2(s.m1 * s.z1);
+  document.getElementById('dp2').value = r2(s.m2 * s.z2);
+  document.getElementById('cref').value = s.cref;
+  document.getElementById('scen-name').value = s.name;
+  suspendSync = false;
+  calc();
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function clearScenarios() {
+  if (SCENARIOS.length === 0) return;
+  if (confirm('¿Eliminar todos los escenarios guardados?')) {
+    SCENARIOS.length = 0;
+    SELECTED.clear();
+    renderScenarios();
+  }
+}
+
+function toggleSelect(i) {
+  if (SELECTED.has(i)) SELECTED.delete(i);
+  else SELECTED.add(i);
+  renderScenarios();
+}
+
+function renderScenarios() {
+  const empty = document.getElementById('scen-empty');
+  const wrap  = document.getElementById('scen-wrap');
+  const tbody = document.getElementById('scen-tbody');
+  const summary = document.getElementById('scen-summary');
+
+  if (SCENARIOS.length === 0) {
+    empty.style.display = 'block';
+    wrap.style.display = 'none';
+    summary.style.display = 'none';
+    return;
+  }
+  empty.style.display = 'none';
+  wrap.style.display = 'block';
+  summary.style.display = 'block';
+
+  tbody.innerHTML = SCENARIOS.map((s, i) => {
+    const g1 = computeGear(s.m1, s.z1);
+    const g2 = computeGear(s.m2, s.z2);
+    const c  = (g1.dp + g2.dp) / 2;
+    const cDiff = Math.abs(c - s.cref);
+    const mEqual = Math.abs(s.m1 - s.m2) < 0.001;
+    const pDiff  = Math.abs(g1.p - g2.p);
+    const i_ratio = g2.z / g1.z;
+
+    const pDiffCell = pDiff < 0.01
+      ? `<span style="color:var(--success);font-weight:700;">${fmt(pDiff)}</span>`
+      : `<span style="color:var(--danger);font-weight:700;">${fmt(pDiff)}</span>`;
+
+    const cDiffCell = cDiff < 0.1
+      ? `<span style="color:var(--success);font-weight:700;">${fmt(cDiff)}</span>`
+      : cDiff <= 5
+        ? `<span style="color:var(--warn);font-weight:700;">${fmt(cDiff)}</span>`
+        : `<span style="color:var(--danger);font-weight:700;">${fmt(cDiff)}</span>`;
+
+    const compatCell = mEqual
+      ? badge('ok', '✅ Compatible')
+      : badge('err', '❌ Incompatible');
+
+    const checked = SELECTED.has(i) ? 'checked' : '';
+    const rowBg = SELECTED.has(i) ? 'background:var(--primary-light) !important;' : '';
+    return `
+      <tr style="${rowBg}">
+        <td><input type="checkbox" ${checked} onchange="toggleSelect(${i})" title="Seleccionar para comparar"></td>
+        <td style="font-weight:700;color:var(--primary);">${i + 1}</td>
+        <td style="cursor:pointer;text-decoration:underline;color:var(--primary);"
+            onclick="loadScenarioToInputs(${i})"
+            title="Click para cargar en los controles">
+          ${escapeHtml(s.name)}
+        </td>
+        <td>${fmt(s.m1)}</td>
+        <td>${fmt(s.m2)}</td>
+        <td>${s.z1}</td>
+        <td>${s.z2}</td>
+        <td>${fmt(g1.dp)}</td>
+        <td>${fmt(g2.dp)}</td>
+        <td>${fmt(g1.p)}</td>
+        <td>${fmt(g2.p)}</td>
+        <td>${pDiffCell}</td>
+        <td>${fmt(c)}</td>
+        <td>${cDiffCell}</td>
+        <td>${fmt(i_ratio)}</td>
+        <td>${compatCell}</td>
+        <td>
+          <button onclick="removeScenario(${i})"
+                  style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem;"
+                  title="Eliminar">✕</button>
+        </td>
+      </tr>`;
+  }).join('');
+
+  renderDetailComparison();
+
+  // Resumen automático
+  const okCount  = SCENARIOS.filter(s => Math.abs(s.m1 - s.m2) < 0.001).length;
+  const badCount = SCENARIOS.length - okCount;
+  const cMatch   = SCENARIOS.filter(s => {
+    const g1 = computeGear(s.m1, s.z1);
+    const g2 = computeGear(s.m2, s.z2);
+    return Math.abs((g1.dp + g2.dp) / 2 - s.cref) < 0.1;
+  }).length;
+  document.getElementById('scen-summary-text').innerHTML =
+    ` ${SCENARIOS.length} escenarios guardados — ` +
+    `<span style="color:var(--success);font-weight:700;">${okCount} compatibles</span>, ` +
+    `<span style="color:var(--danger);font-weight:700;">${badCount} incompatibles</span>, ` +
+    `<span style="color:var(--primary);font-weight:700;">${cMatch} con C que coincide</span> con la referencia.`;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'
+  }[c]));
+}
+
+// ─── COMPARACIÓN DETALLADA ───────────────────────────────────────────────────
+function renderDetailComparison() {
+  const wrap = document.getElementById('detail-cmp');
+  const table = document.getElementById('detail-cmp-table');
+  const note = document.getElementById('detail-cmp-note');
+  const sel = [...SELECTED].filter(i => i < SCENARIOS.length).sort((a,b)=>a-b);
+
+  if (sel.length < 2) {
+    wrap.style.display = 'none';
+    return;
+  }
+  wrap.style.display = 'block';
+
+  // Pre-cómputo
+  const data = sel.map(i => {
+    const s = SCENARIOS[i];
+    const g1 = computeGear(s.m1, s.z1);
+    const g2 = computeGear(s.m2, s.z2);
+    const c = (g1.dp + g2.dp) / 2;
+    return { idx: i+1, name: s.name, s, g1, g2, c, cref: s.cref };
+  });
+
+  // Filas: parámetros para piñón y corona + globales
+  const sections = [
+    { title: 'PIÑÓN',  rows: [
+      ['Módulo (m₁)',        d => fmt(d.g1.m)],
+      ['Dientes (Z₁)',       d => d.g1.z],
+      ['Diám. Primitivo DP₁', d => fmt(d.g1.dp)],
+      ['Paso Circular p₁',   d => fmt(d.g1.p)],
+      ['Cabeza hₐ',          d => fmt(d.g1.ha)],
+      ['Pie hf',             d => fmt(d.g1.hf)],
+      ['Diám. Exterior De',  d => fmt(d.g1.de)],
+      ['Diám. Raíz Dr',      d => fmt(d.g1.dr)],
+    ]},
+    { title: 'CORONA', rows: [
+      ['Módulo (m₂)',        d => fmt(d.g2.m)],
+      ['Dientes (Z₂)',       d => d.g2.z],
+      ['Diám. Primitivo DP₂', d => fmt(d.g2.dp)],
+      ['Paso Circular p₂',   d => fmt(d.g2.p)],
+      ['Cabeza hₐ',          d => fmt(d.g2.ha)],
+      ['Pie hf',             d => fmt(d.g2.hf)],
+      ['Diám. Exterior De',  d => fmt(d.g2.de)],
+      ['Diám. Raíz Dr',      d => fmt(d.g2.dr)],
+    ]},
+    { title: 'CONJUNTO', rows: [
+      ['Δ Módulo |m₁−m₂|',         d => {
+        const x = Math.abs(d.g1.m - d.g2.m);
+        return x < 0.001
+          ? `<span style="color:var(--success);font-weight:700;">${fmt(x)}</span>`
+          : `<span style="color:var(--danger);font-weight:700;">${fmt(x)}</span>`;
+      }],
+      ['Δ Paso Circular |p₁−p₂|',  d => {
+        const x = Math.abs(d.g1.p - d.g2.p);
+        return x < 0.01
+          ? `<span style="color:var(--success);font-weight:700;">${fmt(x)} mm</span>`
+          : `<span style="color:var(--danger);font-weight:700;">${fmt(x)} mm</span>`;
+      }],
+      ['Error acumulado en Z₂ dientes', d => {
+        const x = Math.abs(d.g1.p - d.g2.p) * d.g2.z;
+        return x < 0.5 ? `<span style="color:var(--success);font-weight:700;">${fmt(x)} mm</span>`
+                       : `<span style="color:var(--danger);font-weight:700;">${fmt(x)} mm</span>`;
+      }],
+      ['Distancia entre centros C', d => `<strong>${fmt(d.c)}</strong> mm`],
+      ['C de referencia',           d => `${fmt(d.cref)} mm`],
+      ['|ΔC| respecto a referencia', d => {
+        const x = Math.abs(d.c - d.cref);
+        const col = x < 0.1 ? 'var(--success)' : x <= 5 ? 'var(--warn)' : 'var(--danger)';
+        return `<span style="color:${col};font-weight:700;">${fmt(x)} mm</span>`;
+      }],
+      ['Relación i = Z₂/Z₁',       d => fmt(d.g2.z / d.g1.z)],
+      ['Compatibilidad de engrane', d => Math.abs(d.g1.m - d.g2.m) < 0.001
+        ? badge('ok','✅ Compatible')
+        : badge('err','❌ Incompatible')],
+    ]}
+  ];
+
+  // Construcción del HTML
+  let html = '<thead><tr><th style="min-width:180px;">Parámetro</th>';
+  data.forEach(d => {
+    html += `<th>#${d.idx} — ${escapeHtml(d.name)}</th>`;
+  });
+  html += '</tr></thead><tbody>';
+
+  sections.forEach(sec => {
+    html += `<tr><td colspan="${data.length+1}"
+                style="background:var(--primary);color:#fff;font-weight:700;
+                       letter-spacing:0.05em;font-size:0.78rem;padding:0.4rem 1rem;">
+                ${sec.title}
+              </td></tr>`;
+    sec.rows.forEach(([label, fn]) => {
+      // Detectar variación entre escenarios para resaltar
+      const vals = data.map(d => String(fn(d)));
+      const allEqual = vals.every(v => v === vals[0]);
+      html += `<tr><td class="td-param">${label}</td>`;
+      data.forEach((d, k) => {
+        const cell = fn(d);
+        const style = !allEqual
+          ? 'background:rgba(255,193,7,0.08);'
+          : '';
+        html += `<td style="${style}">${cell}</td>`;
+      });
+      html += '</tr>';
+    });
+  });
+
+  html += '</tbody>';
+  table.innerHTML = html;
+
+  // Nota interpretativa
+  const incompatibles = data.filter(d => Math.abs(d.g1.m - d.g2.m) >= 0.001).length;
+  const cMatch = data.filter(d => Math.abs(d.c - d.cref) < 0.1).length;
+  note.style.background = 'var(--primary-light)';
+  note.style.borderColor = 'var(--primary)';
+  note.innerHTML = `
+    <strong style="color:var(--primary);">Lectura:</strong>
+    Se están comparando <strong>${data.length}</strong> escenarios.
+    ${incompatibles === 0
+      ? `<span style="color:var(--success);font-weight:700;">Todos son compatibles</span> (m₁ = m₂ en cada caso).`
+      : `<span style="color:var(--danger);font-weight:700;">${incompatibles} de ${data.length} son incompatibles</span> por tener módulos distintos.`}
+    ${cMatch === data.length
+      ? ` Todos coinciden con la C de referencia.`
+      : ` ${cMatch} de ${data.length} coinciden con la C de referencia.`}
+    Las celdas resaltadas en amarillo indican filas donde los valores difieren entre escenarios.
+  `;
+}
+
+// ─── CALC PRINCIPAL ──────────────────────────────────────────────────────────
+function calc() {
+  const v = getInputs();
+  const gA1 = computeGear(v.m1, v.z1);
+  const gA2 = computeGear(v.m2, v.z2);
+  if (v.sysB) {
+    const gB1 = computeGear(v.m1B, v.z1B);
+    const gB2 = computeGear(v.m2B, v.z2B);
+    renderResults(gA1, gA2, gB1, gB2);
+  } else {
+    renderResults(gA1, gA2);
+  }
+  renderCenter(gA1, gA2, v.cref);
+  renderCompat(gA1, gA2);
+  if (SELECTED.size >= 2) renderDetailComparison();
+}
+
+function restore() {
+  suspendSync = true;
+  // Sistema A
+  document.getElementById('m1').value = 30;
+  document.getElementById('m2').value = 30;
+  document.getElementById('z1').value = 33;
+  document.getElementById('z2').value = 238;
+  document.getElementById('dp1').value = 990;
+  document.getElementById('dp2').value = 7140;
+  // Sistema B
+  document.getElementById('m1B').value = 30;
+  document.getElementById('m2B').value = 29.82;
+  document.getElementById('z1B').value = 33;
+  document.getElementById('z2B').value = 240;
+  document.getElementById('dp1B').value = 990;
+  document.getElementById('dp2B').value = r2(29.82 * 240);
+  // Ref
+  document.getElementById('cref').value = 4065;
+  suspendSync = false;
+  calc();
+}
+
+function setZ2(v) {
+  document.getElementById('z2').value = v;
+  onFieldEdit('z2');
+}
+
+function badge(type, text) {
+  return `<span class="badge badge-${type==='ok'?'ok':type==='warn'?'warn':'err'}">${text}</span>`;
+}
+
+// ─── DARK MODE ───────────────────────────────────────────────────────────────
+function toggleTheme() {
+  theme = theme === 'light' ? 'dark' : 'light';
+  document.documentElement.setAttribute('data-theme', theme === 'dark' ? 'dark' : '');
+  document.querySelector('.theme-btn').textContent = theme === 'dark' ? '☀️ Modo claro' : '🌙 Modo oscuro';
+}
+
+// ─── INIT ────────────────────────────────────────────────────────────────────
+calc();
+</script>
+</body>
+</html>
