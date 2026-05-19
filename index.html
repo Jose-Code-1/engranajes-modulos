@@ -446,11 +446,6 @@
       </div>
     </div>
 
-    <div class="input-group" style="margin-top: 1rem;">
-      <label>C original de referencia (mm) — sólo para comparar</label>
-      <input type="number" id="cref" value="4065" step="0.1" oninput="calc()">
-      <div class="input-sub">La C real se calcula automáticamente como (DP₁+DP₂)/2.</div>
-    </div>
     <div class="input-group" style="grid-column: 1 / -1; margin-top: 0.5rem;">
       <label>Nombre del escenario actual (opcional)</label>
       <input type="text" id="scen-name" placeholder="Ej: Diseño A, prueba +2 dientes...">
@@ -485,7 +480,6 @@
             <th>p₂ (mm)</th>
             <th>Δp (mm)</th>
             <th>C (mm)</th>
-            <th>|ΔC| (mm)</th>
             <th>i = Z₂/Z₁</th>
             <th>Compatibilidad</th>
             <th></th>
@@ -598,16 +592,6 @@
         <div class="dist-unit">mm</div>
       </div>
       <div class="dist-box">
-        <div class="dist-label">C de referencia</div>
-        <div class="dist-value" id="c-ref-display">4065.00</div>
-        <div class="dist-unit">mm</div>
-      </div>
-      <div class="dist-box">
-        <div class="dist-label">Diferencia |ΔC|</div>
-        <div class="dist-value" id="c-diff">—</div>
-        <div class="dist-unit">mm</div>
-      </div>
-      <div class="dist-box">
         <div class="dist-label">Estado</div>
         <div id="c-status" style="margin-top:0.25rem;">—</div>
       </div>
@@ -674,8 +658,6 @@ function getInputs() {
     z2B:  parseFloat(document.getElementById('z2B').value)  || 0,
     dp1B: parseFloat(document.getElementById('dp1B').value) || 0,
     dp2B: parseFloat(document.getElementById('dp2B').value) || 0,
-    // Ref
-    cref: parseFloat(document.getElementById('cref').value) || 0,
     sysB: document.getElementById('enable-b').checked
   };
 }
@@ -860,12 +842,9 @@ function renderResults(gA1, gA2, gB1, gB2) {
 }
 
 // ─── DISTANCIA ENTRE CENTROS ─────────────────────────────────────────────────
-function renderCenter(g1, g2, cref) {
+function renderCenter(g1, g2) {
   const c = (g1.dp + g2.dp) / 2;
-  const diff = Math.abs(c - cref);
   document.getElementById('c-calc').textContent = fmt(c);
-  document.getElementById('c-ref-display').textContent = fmt(cref);
-  document.getElementById('c-diff').textContent = fmt(diff);
   document.getElementById('c-formula-row').textContent =
     `(${fmt(g1.dp)} + ${fmt(g2.dp)}) / 2`;
   document.getElementById('c-result-td').textContent = fmt(c) + ' mm';
@@ -948,7 +927,7 @@ function saveScenario() {
   const auto = `Escenario ${SCENARIOS.length + 1}`;
   SCENARIOS.push({
     name: nameInput || auto,
-    m1: v.m1, m2: v.m2, z1: v.z1, z2: v.z2, cref: v.cref
+    m1: v.m1, m2: v.m2, z1: v.z1, z2: v.z2
   });
   document.getElementById('scen-name').value = '';
   renderScenarios();
@@ -969,7 +948,6 @@ function loadScenarioToInputs(i) {
   document.getElementById('z2').value = s.z2;
   document.getElementById('dp1').value = r2(s.m1 * s.z1);
   document.getElementById('dp2').value = r2(s.m2 * s.z2);
-  document.getElementById('cref').value = s.cref;
   document.getElementById('scen-name').value = s.name;
   suspendSync = false;
   calc();
@@ -1011,7 +989,6 @@ function renderScenarios() {
     const g1 = computeGear(s.m1, s.z1);
     const g2 = computeGear(s.m2, s.z2);
     const c  = (g1.dp + g2.dp) / 2;
-    const cDiff = Math.abs(c - s.cref);
     const mEqual = Math.abs(s.m1 - s.m2) < 0.001;
     const pDiff  = Math.abs(g1.p - g2.p);
     const i_ratio = g2.z / g1.z;
@@ -1019,12 +996,6 @@ function renderScenarios() {
     const pDiffCell = pDiff < 0.01
       ? `<span style="color:var(--success);font-weight:700;">${fmt(pDiff)}</span>`
       : `<span style="color:var(--danger);font-weight:700;">${fmt(pDiff)}</span>`;
-
-    const cDiffCell = cDiff < 0.1
-      ? `<span style="color:var(--success);font-weight:700;">${fmt(cDiff)}</span>`
-      : cDiff <= 5
-        ? `<span style="color:var(--warn);font-weight:700;">${fmt(cDiff)}</span>`
-        : `<span style="color:var(--danger);font-weight:700;">${fmt(cDiff)}</span>`;
 
     const compatCell = mEqual
       ? badge('ok', '✅ Compatible')
@@ -1051,7 +1022,6 @@ function renderScenarios() {
         <td>${fmt(g2.p)}</td>
         <td>${pDiffCell}</td>
         <td>${fmt(c)}</td>
-        <td>${cDiffCell}</td>
         <td>${fmt(i_ratio)}</td>
         <td>${compatCell}</td>
         <td>
@@ -1067,16 +1037,10 @@ function renderScenarios() {
   // Resumen automático
   const okCount  = SCENARIOS.filter(s => Math.abs(s.m1 - s.m2) < 0.001).length;
   const badCount = SCENARIOS.length - okCount;
-  const cMatch   = SCENARIOS.filter(s => {
-    const g1 = computeGear(s.m1, s.z1);
-    const g2 = computeGear(s.m2, s.z2);
-    return Math.abs((g1.dp + g2.dp) / 2 - s.cref) < 0.1;
-  }).length;
   document.getElementById('scen-summary-text').innerHTML =
     ` ${SCENARIOS.length} escenarios guardados — ` +
     `<span style="color:var(--success);font-weight:700;">${okCount} compatibles</span>, ` +
-    `<span style="color:var(--danger);font-weight:700;">${badCount} incompatibles</span>, ` +
-    `<span style="color:var(--primary);font-weight:700;">${cMatch} con C que coincide</span> con la referencia.`;
+    `<span style="color:var(--danger);font-weight:700;">${badCount} incompatibles</span>.`;
 }
 
 function escapeHtml(s) {
@@ -1104,7 +1068,7 @@ function renderDetailComparison() {
     const g1 = computeGear(s.m1, s.z1);
     const g2 = computeGear(s.m2, s.z2);
     const c = (g1.dp + g2.dp) / 2;
-    return { idx: i+1, name: s.name, s, g1, g2, c, cref: s.cref };
+    return { idx: i+1, name: s.name, s, g1, g2, c };
   });
 
   // Filas: parámetros para piñón y corona + globales
@@ -1148,12 +1112,6 @@ function renderDetailComparison() {
                        : `<span style="color:var(--danger);font-weight:700;">${fmt(x)} mm</span>`;
       }],
       ['Distancia entre centros C', d => `<strong>${fmt(d.c)}</strong> mm`],
-      ['C de referencia',           d => `${fmt(d.cref)} mm`],
-      ['|ΔC| respecto a referencia', d => {
-        const x = Math.abs(d.c - d.cref);
-        const col = x < 0.1 ? 'var(--success)' : x <= 5 ? 'var(--warn)' : 'var(--danger)';
-        return `<span style="color:${col};font-weight:700;">${fmt(x)} mm</span>`;
-      }],
       ['Relación i = Z₂/Z₁',       d => fmt(d.g2.z / d.g1.z)],
       ['Compatibilidad de engrane', d => Math.abs(d.g1.m - d.g2.m) < 0.001
         ? badge('ok','✅ Compatible')
@@ -1195,7 +1153,6 @@ function renderDetailComparison() {
 
   // Nota interpretativa
   const incompatibles = data.filter(d => Math.abs(d.g1.m - d.g2.m) >= 0.001).length;
-  const cMatch = data.filter(d => Math.abs(d.c - d.cref) < 0.1).length;
   note.style.background = 'var(--primary-light)';
   note.style.borderColor = 'var(--primary)';
   note.innerHTML = `
@@ -1204,9 +1161,6 @@ function renderDetailComparison() {
     ${incompatibles === 0
       ? `<span style="color:var(--success);font-weight:700;">Todos son compatibles</span> (m₁ = m₂ en cada caso).`
       : `<span style="color:var(--danger);font-weight:700;">${incompatibles} de ${data.length} son incompatibles</span> por tener módulos distintos.`}
-    ${cMatch === data.length
-      ? ` Todos coinciden con la C de referencia.`
-      : ` ${cMatch} de ${data.length} coinciden con la C de referencia.`}
     Las celdas resaltadas en amarillo indican filas donde los valores difieren entre escenarios.
   `;
 }
@@ -1223,7 +1177,7 @@ function calc() {
   } else {
     renderResults(gA1, gA2);
   }
-  renderCenter(gA1, gA2, v.cref);
+  renderCenter(gA1, gA2);
   renderCompat(gA1, gA2);
   if (SELECTED.size >= 2) renderDetailComparison();
 }
@@ -1244,8 +1198,6 @@ function restore() {
   document.getElementById('z2B').value = 240;
   document.getElementById('dp1B').value = 990;
   document.getElementById('dp2B').value = r2(29.82 * 240);
-  // Ref
-  document.getElementById('cref').value = 4065;
   suspendSync = false;
   calc();
 }
