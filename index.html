@@ -591,10 +591,6 @@
         <div class="dist-value" id="c-calc">—</div>
         <div class="dist-unit">mm</div>
       </div>
-      <div class="dist-box">
-        <div class="dist-label">Estado</div>
-        <div id="c-status" style="margin-top:0.25rem;">—</div>
-      </div>
     </div>
     <div class="table-wrap">
       <table>
@@ -616,20 +612,25 @@
   <!-- COMPATIBILIDAD -->
   <div class="card">
     <div class="card-title"><span class="icon">🔗</span> Análisis de Compatibilidad</div>
-    <div id="compat-banner" class="compat-banner"></div>
-    <div class="table-wrap" style="margin-top:0.85rem;">
-      <table>
-        <thead>
-          <tr>
-            <th>Condición</th>
-            <th>Valor</th>
-            <th>Estado</th>
-          </tr>
-        </thead>
-        <tbody id="compat-tbody"></tbody>
-      </table>
+    <div id="compat-content"></div>
+  </div>
+
+  <!-- VISTA DEL ENGRANE -->
+  <div class="card">
+    <div class="card-title collapsible-header" onclick="toggleCollapse(this)">
+      <span><span class="icon">🔬</span> Vista del Engrane — Zoom al punto de contacto</span>
+      <span class="chev">▼</span>
     </div>
-    <div class="explain-box" id="explain-box"></div>
+    <div class="collapsible-body">
+      <div style="text-align:center;margin-bottom:0.75rem;font-size:0.85rem;color:var(--text-muted);">
+        Perfil rack equivalente con ángulo de presión α = 20°. Línea primitiva vertical central.
+        La vista representa el <strong>Sistema A</strong>.
+      </div>
+      <div id="mesh-svg-wrap" style="display:flex;justify-content:center;background:var(--surface2);border-radius:8px;border:1px solid var(--border);padding:0.75rem;overflow:auto;">
+        <svg id="mesh-svg" viewBox="0 0 700 500" style="max-width:100%;height:auto;min-width:500px;"></svg>
+      </div>
+      <div id="mesh-info" style="margin-top:0.75rem;"></div>
+    </div>
   </div>
 
 </main>
@@ -853,72 +854,334 @@ function renderCenter(g1, g2) {
   document.getElementById('c-formula-row').textContent =
     `(${fmt(g1.dp)} + ${fmt(g2.dp)}) / 2`;
   document.getElementById('c-result-td').textContent = fmt(c) + ' mm';
-
-  let statusHtml;
-  if (diff < 0.1) {
-    statusHtml = badge('ok', '✅ Coincide');
-  } else if (diff <= 5) {
-    statusHtml = badge('warn', '⚠️ Cercana');
-  } else {
-    statusHtml = badge('err', '❌ No coincide');
-  }
-  document.getElementById('c-status').innerHTML = statusHtml;
 }
 
 // ─── COMPATIBILIDAD ──────────────────────────────────────────────────────────
-function renderCompat(g1, g2) {
+function buildCompatBlock(g1, g2, sysLabel) {
   const mEqual = Math.abs(g1.m - g2.m) < 0.001;
   const pDiff  = Math.abs(g1.p - g2.p);
   const pEqual = pDiff < 0.01;
+  // sysLabel: 'A' | 'B' | null (null = sin etiqueta, modo simple)
+  const tagClass = sysLabel === 'B' ? 'sys-b' : 'sys-a';
+  const accentBorder = sysLabel === 'B' ? '#10b981' : '#3b82f6';
 
-  // Banner principal
-  const banner = document.getElementById('compat-banner');
-  if (mEqual) {
-    banner.style.background = 'var(--success-bg)';
-    banner.style.borderColor = 'var(--success)';
-    banner.innerHTML = `
-      <span class="compat-icon">✅</span>
-      <div>
-        <strong style="color:var(--success);font-size:1rem;">COMPATIBLE — Módulos iguales (m₁ = m₂ = ${fmt(g1.m)})</strong>
-        <p>Los pasos circulares son idénticos (p = π × ${fmt(g1.m)} = ${fmt(g1.p)} mm). Los dientes encajan correctamente en todo el arco de acción.</p>
-      </div>`;
-  } else {
-    banner.style.background = 'var(--danger-bg)';
-    banner.style.borderColor = 'var(--danger)';
-    banner.innerHTML = `
-      <span class="compat-icon">❌</span>
-      <div>
-        <strong style="color:var(--danger);font-size:1rem;">INCOMPATIBLE — Módulos distintos (m₁ = ${fmt(g1.m)}, m₂ = ${fmt(g2.m)})</strong>
-        <p>Los pasos circulares difieren: p₁ = ${fmt(g1.p)} mm vs p₂ = ${fmt(g2.p)} mm. <strong>Diferencia: ${fmt(pDiff)} mm por diente.</strong></p>
-      </div>`;
+  // Cabecera (sólo si hay etiqueta)
+  let header = '';
+  if (sysLabel) {
+    header = `<div style="display:flex;align-items:center;gap:0.5rem;margin-bottom:0.6rem;
+                          padding-top:0.4rem;border-top:3px solid ${accentBorder};">
+                <span class="system-tag ${tagClass}">SISTEMA ${sysLabel}</span>
+                <span style="font-size:0.85rem;color:var(--text-muted);">
+                  m₁=${fmt3(g1.m)}, Z₁=${g1.z}, m₂=${fmt3(g2.m)}, Z₂=${g2.z}
+                </span>
+              </div>`;
   }
 
-  // Tabla de condiciones
+  // Banner
+  const bannerBg     = mEqual ? 'var(--success-bg)' : 'var(--danger-bg)';
+  const bannerBorder = mEqual ? 'var(--success)'    : 'var(--danger)';
+  const bannerHtml = mEqual
+    ? `<div class="compat-banner" style="background:${bannerBg};border-color:${bannerBorder};">
+         <span class="compat-icon">✅</span>
+         <div>
+           <strong style="color:var(--success);font-size:1rem;">COMPATIBLE — Módulos iguales (m₁ = m₂ = ${fmt3(g1.m)})</strong>
+           <p>Los pasos circulares son idénticos (p = π × ${fmt3(g1.m)} = ${fmt(g1.p)} mm). Los dientes encajan correctamente en todo el arco de acción.</p>
+         </div>
+       </div>`
+    : `<div class="compat-banner" style="background:${bannerBg};border-color:${bannerBorder};">
+         <span class="compat-icon">❌</span>
+         <div>
+           <strong style="color:var(--danger);font-size:1rem;">INCOMPATIBLE — Módulos distintos (m₁ = ${fmt3(g1.m)}, m₂ = ${fmt3(g2.m)})</strong>
+           <p>Los pasos circulares difieren: p₁ = ${fmt(g1.p)} mm vs p₂ = ${fmt(g2.p)} mm. <strong>Diferencia: ${fmt(pDiff)} mm por diente.</strong></p>
+         </div>
+       </div>`;
+
+  // Tabla
   const rows = [
-    { cond: 'Módulos iguales (m₁ = m₂)', val: `${fmt(g1.m)} ${mEqual?'=':'≠'} ${fmt(g2.m)}`, ok: mEqual },
-    { cond: 'Paso circular igual (p₁ = p₂)', val: `${fmt(g1.p)} vs ${fmt(g2.p)} mm`, ok: pEqual },
-    { cond: 'Diferencia de paso |p₁ − p₂|', val: `${fmt(pDiff)} mm`, ok: pEqual, warn: !pEqual && pDiff < 1 },
-    { cond: 'Altura de cabeza compatible', val: `${fmt(g1.ha)} vs ${fmt(g2.ha)} mm`, ok: Math.abs(g1.ha-g2.ha)<0.001 },
+    { cond: 'Módulos iguales (m₁ = m₂)',     val: `${fmt3(g1.m)} ${mEqual?'=':'≠'} ${fmt3(g2.m)}`, ok: mEqual },
+    { cond: 'Paso circular igual (p₁ = p₂)', val: `${fmt(g1.p)} vs ${fmt(g2.p)} mm`,             ok: pEqual },
+    { cond: 'Diferencia de paso |p₁ − p₂|',  val: `${fmt(pDiff)} mm`, ok: pEqual, warn: !pEqual && pDiff < 1 },
+    { cond: 'Altura de cabeza compatible',   val: `${fmt3(g1.ha)} vs ${fmt3(g2.ha)} mm`,         ok: Math.abs(g1.ha-g2.ha)<0.001 },
   ];
-  document.getElementById('compat-tbody').innerHTML = rows.map(r => `
-    <tr>
-      <td>${r.cond}</td>
-      <td><code>${r.val}</code></td>
-      <td>${r.ok ? badge('ok','✅ OK') : r.warn ? badge('warn','⚠️ Atención') : badge('err','❌ Falla')}</td>
-    </tr>
-  `).join('');
+  const tableHtml = `
+    <div class="table-wrap" style="margin-top:0.85rem;">
+      <table>
+        <thead>
+          <tr><th>Condición</th><th>Valor</th><th>Estado</th></tr>
+        </thead>
+        <tbody>
+          ${rows.map(r => `
+            <tr>
+              <td>${r.cond}</td>
+              <td><code>${r.val}</code></td>
+              <td>${r.ok ? badge('ok','✅ OK') : r.warn ? badge('warn','⚠️ Atención') : badge('err','❌ Falla')}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    </div>`;
 
   // Explicación
-  const eb = document.getElementById('explain-box');
-  if (mEqual) {
-    eb.style.background = 'var(--success-bg)';
-    eb.style.borderColor = 'var(--success)';
-    eb.innerHTML = `<strong>¿Por qué funciona?</strong> Para que dos engranajes rectos engranen correctamente, <strong>ambos deben tener el mismo módulo</strong>. El módulo define el tamaño del diente: su altura, grosor y el paso circular (arco entre dientes). Si m₁ = m₂, el diente del piñón cabe exactamente en el espacio del diente de la corona en cada punto de contacto.`;
+  const ebBg     = mEqual ? 'var(--success-bg)' : 'var(--warn-bg)';
+  const ebBorder = mEqual ? 'var(--success)'    : 'var(--warn)';
+  const errAcum  = pDiff * g2.z;
+  const ebHtml = `
+    <div class="explain-box" style="background:${ebBg};border-color:${ebBorder};">
+      ${mEqual
+        ? `<strong>¿Por qué funciona?</strong> Para que dos engranajes rectos engranen correctamente, <strong>ambos deben tener el mismo módulo</strong>. El módulo define el tamaño del diente: su altura, grosor y el paso circular (arco entre dientes). Si m₁ = m₂, el diente del piñón cabe exactamente en el espacio del diente de la corona en cada punto de contacto.`
+        : `<strong>¿Por qué falla?</strong> El paso circular del piñón es p₁ = <strong>${fmt(g1.p)} mm</strong>, pero el de la corona es p₂ = <strong>${fmt(g2.p)} mm</strong>. Hay una diferencia de <strong>${fmt(pDiff)} mm por diente</strong>. En ${g2.z} dientes, el error acumulado sería <strong>${fmt(errAcum)} mm</strong> — los dientes se montarían encima de los otros causando interferencia, desgaste prematuro y posible rotura. No es posible compensar esta diferencia sólo con la distancia entre centros, ya que el <em>módulo define la geometría local del diente</em>, no sólo el diámetro global.`}
+    </div>`;
+
+  return header + bannerHtml + tableHtml + ebHtml;
+}
+
+function renderCompat(gA1, gA2, gB1, gB2) {
+  const container = document.getElementById('compat-content');
+  let html = buildCompatBlock(gA1, gA2, gB1 ? 'A' : null);
+  if (gB1) {
+    html += `<div style="height:1.25rem;"></div>` + buildCompatBlock(gB1, gB2, 'B');
+  }
+  container.innerHTML = html;
+}
+
+// ─── VISTA DEL ENGRANE (perfil rack equivalente) ─────────────────────────────
+// Sutherland-Hodgman: recorta el polígono `subject` contra el polígono convexo `clip`
+function clipPolygon(subject, clip) {
+  let output = subject.slice();
+  const n = clip.length;
+  for (let i = 0; i < n; i++) {
+    if (output.length === 0) break;
+    const input = output;
+    output = [];
+    const A = clip[i], B = clip[(i + 1) % n];
+    for (let j = 0; j < input.length; j++) {
+      const P = input[j], Q = input[(j + 1) % input.length];
+      const Pin = ((B[0]-A[0])*(P[1]-A[1]) - (B[1]-A[1])*(P[0]-A[0])) >= 0;
+      const Qin = ((B[0]-A[0])*(Q[1]-A[1]) - (B[1]-A[1])*(Q[0]-A[0])) >= 0;
+      if (Pin && Qin) output.push(Q);
+      else if (Pin && !Qin) output.push(intersectSeg(P, Q, A, B));
+      else if (!Pin && Qin) { output.push(intersectSeg(P, Q, A, B)); output.push(Q); }
+    }
+  }
+  return output;
+}
+function intersectSeg(P, Q, A, B) {
+  const dx1 = Q[0]-P[0], dy1 = Q[1]-P[1];
+  const dx2 = B[0]-A[0], dy2 = B[1]-A[1];
+  const denom = dx1*dy2 - dy1*dx2;
+  if (Math.abs(denom) < 1e-9) return P;
+  const t = ((A[0]-P[0])*dy2 - (A[1]-P[1])*dx2) / denom;
+  return [P[0] + t*dx1, P[1] + t*dy1];
+}
+function polygonArea(poly) {
+  let a = 0;
+  for (let i = 0; i < poly.length; i++) {
+    const [x1, y1] = poly[i];
+    const [x2, y2] = poly[(i + 1) % poly.length];
+    a += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(a) / 2;
+}
+
+function renderMeshView(g1, g2) {
+  const svg = document.getElementById('mesh-svg');
+  if (!svg) return;
+
+  const W = 700, H = 500;
+  const cx = W / 2, cy = H / 2;
+  const alpha = 20 * Math.PI / 180;
+
+  // Escala: queremos ver ~5 dientes del piñón en la ventana
+  const m_avg = (g1.m + g2.m) / 2;
+  const p_avg = Math.PI * m_avg;
+  let scale = (H * 0.75) / (5 * p_avg);
+  scale = Math.max(0.02, Math.min(scale, 20));
+
+  // Radios reales en píxeles
+  const rp1 = g1.m * g1.z / 2 * scale;
+  const rp2 = g2.m * g2.z / 2 * scale;
+  const rb1 = rp1 * Math.cos(alpha);
+  const rb2 = rp2 * Math.cos(alpha);
+  const ra1 = rp1 + g1.m * scale;
+  const ra2 = rp2 + g2.m * scale;
+  const rf1 = Math.max(rp1 * 0.4, rp1 - 1.25 * g1.m * scale);
+  const rf2 = Math.max(rp2 * 0.4, rp2 - 1.25 * g2.m * scale);
+
+  // Centros: piñón a la izquierda, corona a la derecha; tangentes en (cx, cy)
+  const cxP = cx - rp1, cyP = cy;
+  const cxC = cx + rp2, cyC = cy;
+
+  // Ángulos
+  const halfAng1 = Math.PI / g1.z;
+  const halfAng2 = Math.PI / g2.z;
+  const invAlpha = Math.tan(alpha) - alpha;
+  const tMax1 = Math.sqrt(Math.max(0.0001, (ra1 / rb1) ** 2 - 1));
+  const tMax2 = Math.sqrt(Math.max(0.0001, (ra2 / rb2) ** 2 - 1));
+
+  // Posicionamiento: piñón con TOOTH centrada en ángulo 0 (lado derecho, hacia corona)
+  //                 corona con SPACE centrado en ángulo π (lado izquierdo, hacia piñón)
+  // → corona tiene tooth #0 en ángulo π + halfAng2 (justo arriba del space que recibe el diente del piñón)
+  const baseAng1 = 0;
+  const baseAng2 = Math.PI + halfAng2;
+
+  // Punto del perfil involuta en parámetro t
+  function involutePt(t, side, rotation, cxG, cyG, rb) {
+    const xi = rb * (Math.cos(t) + t * Math.sin(t));
+    let yi = rb * (Math.sin(t) - t * Math.cos(t));
+    if (side === 'L') yi = -yi;
+    const c = Math.cos(rotation), s = Math.sin(rotation);
+    return [cxG + xi * c - yi * s, cyG + xi * s + yi * c];
+  }
+  const fx = (n) => n.toFixed(2);
+
+  // Construye el path completo del engranaje (todos los dientes)
+  function buildGearPath(cxG, cyG, Z, rb, ra, rf, halfAng, baseAng, tMax, sweep) {
+    const N = 7;
+    let path = '';
+    for (let i = 0; i < Z; i++) {
+      const ang = baseAng + i * 2 * Math.PI / Z;
+      const rotL = ang + halfAng + invAlpha;
+      const rotR = ang - halfAng - invAlpha;
+      const leftDed  = [cxG + rf * Math.cos(rotL), cyG + rf * Math.sin(rotL)];
+      const rightDed = [cxG + rf * Math.cos(rotR), cyG + rf * Math.sin(rotR)];
+
+      if (i === 0) path = `M ${fx(leftDed[0])} ${fx(leftDed[1])}`;
+
+      // Radial: dedendum → base (si rb > rf)
+      if (rb > rf + 0.5) {
+        const leftBase = involutePt(0, 'L', rotL, cxG, cyG, rb);
+        path += ` L ${fx(leftBase[0])} ${fx(leftBase[1])}`;
+      }
+      // Subida por flanco izquierdo
+      for (let j = 1; j <= N; j++) {
+        const t = j * tMax / N;
+        const p = involutePt(t, 'L', rotL, cxG, cyG, rb);
+        path += ` L ${fx(p[0])} ${fx(p[1])}`;
+      }
+      // Arco de cabeza (sobre ra) del extremo izquierdo al derecho
+      const rightTip = involutePt(tMax, 'R', rotR, cxG, cyG, rb);
+      path += ` A ${fx(ra)} ${fx(ra)} 0 0 ${sweep} ${fx(rightTip[0])} ${fx(rightTip[1])}`;
+      // Bajada por flanco derecho
+      for (let j = N - 1; j >= 0; j--) {
+        const t = j * tMax / N;
+        const p = involutePt(t, 'R', rotR, cxG, cyG, rb);
+        path += ` L ${fx(p[0])} ${fx(p[1])}`;
+      }
+      if (rb > rf + 0.5) {
+        path += ` L ${fx(rightDed[0])} ${fx(rightDed[1])}`;
+      }
+      // Arco de dedendum hasta el próximo diente
+      const nextAng = baseAng + (i + 1) * 2 * Math.PI / Z;
+      const nextRotL = nextAng + halfAng + invAlpha;
+      const nextLeftDed = [cxG + rf * Math.cos(nextRotL), cyG + rf * Math.sin(nextRotL)];
+      path += ` A ${fx(rf)} ${fx(rf)} 0 0 ${sweep} ${fx(nextLeftDed[0])} ${fx(nextLeftDed[1])}`;
+    }
+    path += ' Z';
+    return path;
+  }
+
+  const pinionPath = buildGearPath(cxP, cyP, g1.z, rb1, ra1, rf1, halfAng1, baseAng1, tMax1, 0);
+  const coronaPath = buildGearPath(cxC, cyC, g2.z, rb2, ra2, rf2, halfAng2, baseAng2, tMax2, 0);
+
+  // Detección de interferencia: aproximamos cada diente como trapecio (dedendum→cabeza)
+  function pinionTrap(i) {
+    const ang = baseAng1 + i * 2 * Math.PI / g1.z;
+    const rotL = ang + halfAng1 + invAlpha;
+    const rotR = ang - halfAng1 - invAlpha;
+    const tipL = involutePt(tMax1, 'L', rotL, cxP, cyP, rb1);
+    const tipR = involutePt(tMax1, 'R', rotR, cxP, cyP, rb1);
+    const rootL = [cxP + rf1 * Math.cos(rotL), cyP + rf1 * Math.sin(rotL)];
+    const rootR = [cxP + rf1 * Math.cos(rotR), cyP + rf1 * Math.sin(rotR)];
+    return [rootL, tipL, tipR, rootR];
+  }
+  function coronaTrap(k) {
+    const ang = baseAng2 + k * 2 * Math.PI / g2.z;
+    const rotL = ang + halfAng2 + invAlpha;
+    const rotR = ang - halfAng2 - invAlpha;
+    const tipL = involutePt(tMax2, 'L', rotL, cxC, cyC, rb2);
+    const tipR = involutePt(tMax2, 'R', rotR, cxC, cyC, rb2);
+    const rootL = [cxC + rf2 * Math.cos(rotL), cyC + rf2 * Math.sin(rotL)];
+    const rootR = [cxC + rf2 * Math.cos(rotR), cyC + rf2 * Math.sin(rotR)];
+    return [rootL, tipL, tipR, rootR];
+  }
+
+  // Verifico dientes cercanos al punto de contacto
+  let interferenceShapes = '', interferenceCount = 0;
+  const pinionTeethToCheck = [];
+  for (let di = -5; di <= 5; di++) pinionTeethToCheck.push((di + g1.z) % g1.z);
+  const coronaTeethToCheck = [];
+  for (let dk = -5; dk <= 5; dk++) coronaTeethToCheck.push((dk + g2.z) % g2.z);
+
+  for (const i of pinionTeethToCheck) {
+    const pT = pinionTrap(i);
+    const pCenter = [(pT[0][0] + pT[2][0]) / 2, (pT[0][1] + pT[2][1]) / 2];
+    for (const k of coronaTeethToCheck) {
+      const cT = coronaTrap(k);
+      const cCenter = [(cT[0][0] + cT[2][0]) / 2, (cT[0][1] + cT[2][1]) / 2];
+      const dx = pCenter[0] - cCenter[0], dy = pCenter[1] - cCenter[1];
+      if (Math.sqrt(dx*dx + dy*dy) > Math.max(p_avg * scale * 1.2, 30)) continue;
+      const inter = clipPolygon(pT, cT);
+      if (inter.length >= 3 && polygonArea(inter) > 4) {
+        interferenceCount++;
+        const pts = inter.map(p => `${fx(p[0])},${fx(p[1])}`).join(' ');
+        interferenceShapes += `<polygon points="${pts}" fill="#dc2626" fill-opacity="0.7" stroke="#7f1d1d" stroke-width="1"/>`;
+      }
+    }
+  }
+
+  // Colores
+  const isDark = theme === 'dark';
+  const bg = isDark ? '#0f172a' : '#ffffff';
+  const pinionFill = '#3b82f6', pinionStroke = '#1e40af';
+  const coronaFill = '#94a3b8', coronaStroke = '#475569';
+  const refColor   = isDark ? '#94a3b8' : '#475569';
+
+  // Circunferencias primitivas (referencia)
+  const pitchCircles = `
+    <circle cx="${fx(cxP)}" cy="${fx(cyP)}" r="${fx(rp1)}" fill="none" stroke="${pinionStroke}" stroke-width="1" stroke-dasharray="5,3" opacity="0.55"/>
+    <circle cx="${fx(cxC)}" cy="${fx(cyC)}" r="${fx(rp2)}" fill="none" stroke="${coronaStroke}" stroke-width="1" stroke-dasharray="5,3" opacity="0.55"/>
+  `;
+
+  // Punto de contacto y línea de presión (tangente vertical en el contacto)
+  const contactMark = `
+    <line x1="${cx}" y1="0" x2="${cx}" y2="${H}" stroke="${refColor}" stroke-width="1" stroke-dasharray="4,4" opacity="0.45"/>
+    <text x="${cx + 5}" y="14" font-size="10" fill="${refColor}" font-family="monospace">tangente primitiva</text>
+    <circle cx="${cx}" cy="${cy}" r="4" fill="#dc2626"/>
+    <text x="${cx + 8}" y="${cy + 16}" font-size="10" fill="#dc2626" font-family="monospace">punto de contacto</text>
+  `;
+
+  svg.innerHTML = `
+    <rect width="${W}" height="${H}" fill="${bg}" rx="6"/>
+    ${pitchCircles}
+    <path d="${pinionPath}" fill="${pinionFill}" fill-opacity="0.45" stroke="${pinionStroke}" stroke-width="1.4" stroke-linejoin="round"/>
+    <path d="${coronaPath}" fill="${coronaFill}" fill-opacity="0.55" stroke="${coronaStroke}" stroke-width="1.4" stroke-linejoin="round"/>
+    ${interferenceShapes}
+    ${contactMark}
+
+    <text x="20" y="${H - 28}" font-size="13" font-weight="bold" fill="${pinionStroke}">PIÑÓN  m₁=${fmt3(g1.m)}, Z₁=${g1.z}</text>
+    <text x="20" y="${H - 12}" font-size="10" fill="${refColor}" font-family="monospace">rp₁=${fmt(g1.dp/2)}  ra₁=${fmt(g1.de/2)}  rf₁=${fmt(g1.dr/2)} mm</text>
+    <text x="${W - 20}" y="${H - 28}" font-size="13" font-weight="bold" text-anchor="end" fill="${coronaStroke}">CORONA  m₂=${fmt3(g2.m)}, Z₂=${g2.z}</text>
+    <text x="${W - 20}" y="${H - 12}" font-size="10" text-anchor="end" fill="${refColor}" font-family="monospace">rp₂=${fmt(g2.dp/2)}  ra₂=${fmt(g2.de/2)}  rf₂=${fmt(g2.dr/2)} mm</text>
+  `;
+
+  // Texto interpretativo debajo
+  const pDiff = Math.abs(g1.p - g2.p);
+  const mEqual = Math.abs(g1.m - g2.m) < 0.001;
+  const info = document.getElementById('mesh-info');
+  if (mEqual && interferenceCount === 0) {
+    info.innerHTML = `
+      <div class="explain-box" style="background:var(--success-bg);border-color:var(--success);">
+        <strong>✅ Engrane correcto:</strong> los dientes encajan limpiamente en la zona de contacto. Sin zonas de interferencia detectadas.
+      </div>`;
+  } else if (!mEqual && interferenceCount === 0) {
+    info.innerHTML = `
+      <div class="explain-box" style="background:var(--warn-bg);border-color:var(--warn);">
+        <strong>⚠️ Δp = ${fmt(pDiff)} mm por diente:</strong> en la zona local de contacto los dientes no chocan, pero a lo largo de toda la corona (${g2.z} dientes) el error acumulado es <strong>${fmt(pDiff * g2.z)} mm</strong> — incompatibilidad estructural real.
+      </div>`;
   } else {
-    const errAcum = pDiff * g2.z;
-    eb.style.background = 'var(--warn-bg)';
-    eb.style.borderColor = 'var(--warn)';
-    eb.innerHTML = `<strong>¿Por qué falla?</strong> El paso circular del piñón es p₁ = <strong>${fmt(g1.p)} mm</strong>, pero el de la corona es p₂ = <strong>${fmt(g2.p)} mm</strong>. Hay una diferencia de <strong>${fmt(pDiff)} mm por diente</strong>. En ${g2.z} dientes, el error acumulado sería <strong>${fmt(errAcum)} mm</strong> — los dientes se montarían encima de los otros causando interferencia, desgaste prematuro y posible rotura. No es posible compensar esta diferencia sólo con la distancia entre centros, ya que el <em>módulo define la geometría local del diente</em>, no sólo el diámetro global.`;
+    info.innerHTML = `
+      <div class="explain-box" style="background:var(--danger-bg);border-color:var(--danger);">
+        <strong>❌ Interferencia detectada:</strong> Δp = ${fmt(pDiff)} mm por diente. Las <span style="color:var(--danger);font-weight:700;">${interferenceCount} zonas rojas</span> son superposiciones físicas reales: el diente invade el espacio del otro engranaje. El conjunto no puede montarse.
+      </div>`;
   }
 }
 
@@ -1233,15 +1496,17 @@ function calc() {
   const v = getInputs();
   const gA1 = computeGear(v.m1, v.z1);
   const gA2 = computeGear(v.m2, v.z2);
+  let gB1 = null, gB2 = null;
   if (v.sysB) {
-    const gB1 = computeGear(v.m1B, v.z1B);
-    const gB2 = computeGear(v.m2B, v.z2B);
+    gB1 = computeGear(v.m1B, v.z1B);
+    gB2 = computeGear(v.m2B, v.z2B);
     renderResults(gA1, gA2, gB1, gB2);
   } else {
     renderResults(gA1, gA2);
   }
   renderCenter(gA1, gA2);
-  renderCompat(gA1, gA2);
+  renderCompat(gA1, gA2, gB1, gB2);
+  renderMeshView(gA1, gA2);
   if (SELECTED.size >= 2) renderDetailComparison();
 }
 
