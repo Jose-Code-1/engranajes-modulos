@@ -925,10 +925,13 @@ function saveScenario() {
   const v = getInputs();
   const nameInput = document.getElementById('scen-name').value.trim();
   const auto = `Escenario ${SCENARIOS.length + 1}`;
-  SCENARIOS.push({
-    name: nameInput || auto,
-    m1: v.m1, m2: v.m2, z1: v.z1, z2: v.z2
-  });
+  const scen = { name: nameInput || auto, m1: v.m1, m2: v.m2, z1: v.z1, z2: v.z2 };
+  if (v.sysB) {
+    scen.hasB = true;
+    scen.m1B = v.m1B; scen.m2B = v.m2B;
+    scen.z1B = v.z1B; scen.z2B = v.z2B;
+  }
+  SCENARIOS.push(scen);
   document.getElementById('scen-name').value = '';
   renderScenarios();
 }
@@ -949,6 +952,21 @@ function loadScenarioToInputs(i) {
   document.getElementById('dp1').value = r2(s.m1 * s.z1);
   document.getElementById('dp2').value = r2(s.m2 * s.z2);
   document.getElementById('scen-name').value = s.name;
+  // Restaurar Sistema B si el escenario lo tiene
+  const enableB = document.getElementById('enable-b');
+  if (s.hasB) {
+    document.getElementById('m1B').value  = s.m1B;
+    document.getElementById('m2B').value  = s.m2B;
+    document.getElementById('z1B').value  = s.z1B;
+    document.getElementById('z2B').value  = s.z2B;
+    document.getElementById('dp1B').value = r2(s.m1B * s.z1B);
+    document.getElementById('dp2B').value = r2(s.m2B * s.z2B);
+    enableB.checked = true;
+    document.getElementById('sys-b-block').style.display = 'block';
+  } else {
+    enableB.checked = false;
+    document.getElementById('sys-b-block').style.display = 'none';
+  }
   suspendSync = false;
   calc();
   window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1003,17 +1021,18 @@ function renderScenarios() {
 
     const checked = SELECTED.has(i) ? 'checked' : '';
     const rowBg = SELECTED.has(i) ? 'background:var(--primary-light) !important;' : '';
-    return `
+
+    // Fila principal: Sistema A
+    let rows = `
       <tr style="${rowBg}">
-        <td><input type="checkbox" ${checked} onchange="toggleSelect(${i})" title="Seleccionar para comparar"></td>
-        <td style="font-weight:700;color:var(--primary);">${i + 1}</td>
-        <td style="cursor:pointer;text-decoration:underline;color:var(--primary);"
-            onclick="loadScenarioToInputs(${i})"
-            title="Click para cargar en los controles">
-          ${escapeHtml(s.name)}
+        <td rowspan="${s.hasB ? 2 : 1}"><input type="checkbox" ${checked} onchange="toggleSelect(${i})" title="Seleccionar para comparar"></td>
+        <td rowspan="${s.hasB ? 2 : 1}" style="font-weight:700;color:var(--primary);">${i + 1}</td>
+        <td rowspan="${s.hasB ? 2 : 1}" style="cursor:pointer;text-decoration:underline;color:var(--primary);"
+            onclick="loadScenarioToInputs(${i})" title="Click para cargar en los controles">
+          ${escapeHtml(s.name)}${s.hasB ? ' <span class="system-tag sys-b" style="font-size:0.68rem;vertical-align:middle;">+B</span>' : ''}
         </td>
-        <td>${fmt(s.m1)}</td>
-        <td>${fmt(s.m2)}</td>
+        <td><span class="system-tag sys-a" style="font-size:0.68rem;">A</span> ${fmt(s.m1)}</td>
+        <td><span class="system-tag sys-a" style="font-size:0.68rem;">A</span> ${fmt(s.m2)}</td>
         <td>${s.z1}</td>
         <td>${s.z2}</td>
         <td>${fmt(g1.dp)}</td>
@@ -1024,12 +1043,41 @@ function renderScenarios() {
         <td>${fmt(c)}</td>
         <td>${fmt(i_ratio)}</td>
         <td>${compatCell}</td>
-        <td>
+        <td rowspan="${s.hasB ? 2 : 1}">
           <button onclick="removeScenario(${i})"
                   style="background:transparent;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem;"
                   title="Eliminar">✕</button>
         </td>
       </tr>`;
+
+    // Sub-fila: Sistema B (si existe)
+    if (s.hasB) {
+      const gB1 = computeGear(s.m1B, s.z1B);
+      const gB2 = computeGear(s.m2B, s.z2B);
+      const cB  = (gB1.dp + gB2.dp) / 2;
+      const mEqB = Math.abs(s.m1B - s.m2B) < 0.001;
+      const pDiffB = Math.abs(gB1.p - gB2.p);
+      const pDiffCellB = pDiffB < 0.01
+        ? `<span style="color:var(--success);font-weight:700;">${fmt(pDiffB)}</span>`
+        : `<span style="color:var(--danger);font-weight:700;">${fmt(pDiffB)}</span>`;
+      const compatCellB = mEqB ? badge('ok','✅ Compatible') : badge('err','❌ Incompatible');
+      rows += `
+      <tr style="background:var(--success-bg);">
+        <td><span class="system-tag sys-b" style="font-size:0.68rem;">B</span> ${fmt(s.m1B)}</td>
+        <td><span class="system-tag sys-b" style="font-size:0.68rem;">B</span> ${fmt(s.m2B)}</td>
+        <td>${s.z1B}</td>
+        <td>${s.z2B}</td>
+        <td>${fmt(gB1.dp)}</td>
+        <td>${fmt(gB2.dp)}</td>
+        <td>${fmt(gB1.p)}</td>
+        <td>${fmt(gB2.p)}</td>
+        <td>${pDiffCellB}</td>
+        <td>${fmt(cB)}</td>
+        <td>${fmt(gB2.z / gB1.z)}</td>
+        <td>${compatCellB}</td>
+      </tr>`;
+    }
+    return rows;
   }).join('');
 
   renderDetailComparison();
@@ -1037,10 +1085,12 @@ function renderScenarios() {
   // Resumen automático
   const okCount  = SCENARIOS.filter(s => Math.abs(s.m1 - s.m2) < 0.001).length;
   const badCount = SCENARIOS.length - okCount;
+  const withB    = SCENARIOS.filter(s => s.hasB).length;
   document.getElementById('scen-summary-text').innerHTML =
     ` ${SCENARIOS.length} escenarios guardados — ` +
     `<span style="color:var(--success);font-weight:700;">${okCount} compatibles</span>, ` +
-    `<span style="color:var(--danger);font-weight:700;">${badCount} incompatibles</span>.`;
+    `<span style="color:var(--danger);font-weight:700;">${badCount} incompatibles</span>` +
+    (withB ? `, <span style="color:#059669;font-weight:700;">${withB} con Sistema B</span>` : '') + `.`;
 }
 
 function escapeHtml(s) {
@@ -1056,20 +1106,27 @@ function renderDetailComparison() {
   const note = document.getElementById('detail-cmp-note');
   const sel = [...SELECTED].filter(i => i < SCENARIOS.length).sort((a,b)=>a-b);
 
-  if (sel.length < 2) {
+  // Aplanar: cada escenario puede aportar 1 columna (solo A) o 2 (A + B)
+  const systems = [];
+  sel.filter(i => i < SCENARIOS.length).sort((a,b)=>a-b).forEach(i => {
+    const s = SCENARIOS[i];
+    const g1 = computeGear(s.m1, s.z1);
+    const g2 = computeGear(s.m2, s.z2);
+    systems.push({ label: `#${i+1} ${s.name}${s.hasB ? ' (A)' : ''}`, g1, g2, c: (g1.dp+g2.dp)/2, isB: false });
+    if (s.hasB) {
+      const gB1 = computeGear(s.m1B, s.z1B);
+      const gB2 = computeGear(s.m2B, s.z2B);
+      systems.push({ label: `#${i+1} ${s.name} (B)`, g1: gB1, g2: gB2, c: (gB1.dp+gB2.dp)/2, isB: true });
+    }
+  });
+
+  if (systems.length < 2) {
     wrap.style.display = 'none';
     return;
   }
   wrap.style.display = 'block';
 
-  // Pre-cómputo
-  const data = sel.map(i => {
-    const s = SCENARIOS[i];
-    const g1 = computeGear(s.m1, s.z1);
-    const g2 = computeGear(s.m2, s.z2);
-    const c = (g1.dp + g2.dp) / 2;
-    return { idx: i+1, name: s.name, s, g1, g2, c };
-  });
+  const data = systems; // alias para reutilizar el resto del código
 
   // Filas: parámetros para piñón y corona + globales
   const sections = [
@@ -1122,12 +1179,13 @@ function renderDetailComparison() {
   // Construcción del HTML
   let html = '<thead><tr><th style="min-width:180px;">Parámetro</th>';
   data.forEach(d => {
-    html += `<th>#${d.idx} — ${escapeHtml(d.name)}</th>`;
+    const cls = d.isB ? 'group-b' : 'group-a';
+    html += `<th class="${cls}">${escapeHtml(d.label)}</th>`;
   });
   html += '</tr></thead><tbody>';
 
   sections.forEach(sec => {
-    html += `<tr><td colspan="${data.length+1}"
+    html += `<tr><td colspan="${systems.length+1}"
                 style="background:var(--primary);color:#fff;font-weight:700;
                        letter-spacing:0.05em;font-size:0.78rem;padding:0.4rem 1rem;">
                 ${sec.title}
