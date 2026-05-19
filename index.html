@@ -377,7 +377,7 @@
       <div class="controls-grid">
         <div class="input-group">
           <label>Módulo Piñón (m₁)</label>
-          <input type="number" id="m1" value="30" min="0.1" step="0.01" oninput="onFieldEdit('m1')">
+          <input type="number" id="m1" value="30" min="0.1" step="0.001" oninput="onFieldEdit('m1')">
           <div class="input-sub">DP₁ se recalcula</div>
         </div>
         <div class="input-group">
@@ -387,12 +387,12 @@
         </div>
         <div class="input-group">
           <label>DP Piñón (mm)</label>
-          <input type="number" id="dp1" value="990" min="1" step="0.01" oninput="onFieldEdit('dp1')">
+          <input type="number" id="dp1" value="990" min="1" step="10" oninput="onFieldEdit('dp1')">
           <div class="input-sub">Recalcula m₁ = DP₁/Z₁</div>
         </div>
         <div class="input-group">
           <label>Módulo Corona (m₂)</label>
-          <input type="number" id="m2" value="30" min="0.1" step="0.01" oninput="onFieldEdit('m2')">
+          <input type="number" id="m2" value="30" min="0.1" step="0.001" oninput="onFieldEdit('m2')">
           <div class="input-sub">DP₂ se recalcula</div>
         </div>
         <div class="input-group">
@@ -405,7 +405,7 @@
         </div>
         <div class="input-group">
           <label>DP Corona (mm)</label>
-          <input type="number" id="dp2" value="7140" min="1" step="0.01" oninput="onFieldEdit('dp2')">
+          <input type="number" id="dp2" value="7140" min="1" step="10" oninput="onFieldEdit('dp2')">
           <div class="input-sub">Recalcula m₂ = DP₂/Z₂</div>
         </div>
       </div>
@@ -421,7 +421,7 @@
       <div class="controls-grid">
         <div class="input-group">
           <label>Módulo Piñón (m₁ᵦ)</label>
-          <input type="number" id="m1B" value="30" min="0.1" step="0.01" oninput="onFieldEdit('m1B')">
+          <input type="number" id="m1B" value="30" min="0.1" step="0.001" oninput="onFieldEdit('m1B')">
         </div>
         <div class="input-group">
           <label>Dientes Piñón (Z₁ᵦ)</label>
@@ -429,11 +429,11 @@
         </div>
         <div class="input-group">
           <label>DP Piñón B (mm)</label>
-          <input type="number" id="dp1B" value="990" min="1" step="0.01" oninput="onFieldEdit('dp1B')">
+          <input type="number" id="dp1B" value="990" min="1" step="10" oninput="onFieldEdit('dp1B')">
         </div>
         <div class="input-group">
           <label>Módulo Corona (m₂ᵦ)</label>
-          <input type="number" id="m2B" value="29.82" min="0.1" step="0.01" oninput="onFieldEdit('m2B')">
+          <input type="number" id="m2B" value="29.82" min="0.1" step="0.001" oninput="onFieldEdit('m2B')">
         </div>
         <div class="input-group">
           <label>Dientes Corona (Z₂ᵦ)</label>
@@ -441,7 +441,7 @@
         </div>
         <div class="input-group">
           <label>DP Corona B (mm)</label>
-          <input type="number" id="dp2B" value="7156.8" min="1" step="0.01" oninput="onFieldEdit('dp2B')">
+          <input type="number" id="dp2B" value="7156.8" min="1" step="10" oninput="onFieldEdit('dp2B')">
         </div>
       </div>
     </div>
@@ -640,7 +640,9 @@ let theme = 'light';
 let suspendSync = false; // evita bucles en la sincronización bidireccional
 
 function r2(v) { return Math.round(v * 100) / 100; }
+function r3(v) { return Math.round(v * 1000) / 1000; }
 function fmt(v) { return r2(v).toFixed(2); }
+function fmt3(v) { return r3(v).toFixed(3); }
 
 function getInputs() {
   return {
@@ -663,7 +665,9 @@ function getInputs() {
 }
 
 function setVal(id, v) {
-  document.getElementById(id).value = r2(v);
+  // Los inputs de módulo (m1, m2, m1B, m2B) usan 3 decimales; el resto 2.
+  const isModule = /^m[12]B?$/.test(id);
+  document.getElementById(id).value = isModule ? r3(v) : r2(v);
 }
 
 // Sincroniza m, Z y DP cuando el usuario edita uno de ellos.
@@ -731,12 +735,12 @@ function computeGear(m, z) {
 // ─── TABLA DE RESULTADOS ─────────────────────────────────────────────────────
 function buildRowSpec(g1, g2) {
   return [
-    { name: "Módulo (m)",            formula: "—",        getPin: g => g.m,  getCor: g => g.m  },
+    { name: "Módulo (m)",            formula: "—",        getPin: g => g.m,  getCor: g => g.m,  fmt: fmt3 },
     { name: "Dientes (Z)",           formula: "—",        getPin: g => g.z,  getCor: g => g.z  },
     { name: "Diámetro Primitivo (DP)", formula: "m × Z",  getPin: g => g.dp, getCor: g => g.dp },
     { name: "Paso Circular (p)",     formula: "π × m",    getPin: g => g.p,  getCor: g => g.p  },
-    { name: "Altura de Cabeza (hₐ)", formula: "m",        getPin: g => g.ha, getCor: g => g.ha },
-    { name: "Altura de Pie (hf)",    formula: "1.25 × m", getPin: g => g.hf, getCor: g => g.hf },
+    { name: "Altura de Cabeza (hₐ)", formula: "m",        getPin: g => g.ha, getCor: g => g.ha, fmt: fmt3 },
+    { name: "Altura de Pie (hf)",    formula: "1.25 × m", getPin: g => g.hf, getCor: g => g.hf, fmt: fmt3 },
     { name: "Diámetro Exterior (De)", formula: "DP + 2m", getPin: g => g.de, getCor: g => g.de },
     { name: "Diámetro de Raíz (Dr)", formula: "DP − 2.5m",getPin: g => g.dr, getCor: g => g.dr },
   ];
@@ -778,6 +782,7 @@ function renderResults(gA1, gA2, gB1, gB2) {
   const rows = buildRowSpec(gA1, gA2);
 
   tbody.innerHTML = rows.map(r => {
+    const f = r.fmt || fmt; // formateador específico (fmt3 para módulos) o por defecto
     const aPin = r.getPin(gA1);
     const aCor = r.getCor(gA2);
     if (!sysB) {
@@ -792,17 +797,17 @@ function renderResults(gA1, gA2, gB1, gB2) {
                             : badge('err', `❌ Δ = ${fmt(dPC)} mm`);
       } else if (r.name.startsWith("Módulo")) {
         estado = dPC < 0.001 ? badge('ok','✅ Iguales')
-                             : badge('err', `❌ Δ = ${fmt(dPC)}`);
+                             : badge('err', `❌ Δ = ${fmt3(dPC)}`);
       } else if (r.name.startsWith("Altura")) {
-        estado = dPC < 0.001 ? badge('ok','✅') : badge('warn',`Δ = ${fmt(dPC)} mm`);
+        estado = dPC < 0.001 ? badge('ok','✅') : badge('warn',`Δ = ${fmt3(dPC)} mm`);
       } else {
         estado = `Δ = ${fmt(dPC)} mm`;
       }
       return `<tr>
         <td class="td-param">${r.name}</td>
         <td class="td-formula">${r.formula}</td>
-        <td>${fmt(aPin)}</td>
-        <td>${fmt(aCor)}</td>
+        <td>${f(aPin)}</td>
+        <td>${f(aCor)}</td>
         <td>${estado}</td>
       </tr>`;
     }
@@ -818,17 +823,17 @@ function renderResults(gA1, gA2, gB1, gB2) {
       diffCell = badge('ok', '✅ A = B');
     } else {
       const parts = [];
-      if (!samePin) parts.push(`P: ${fmt(dPin)}`);
-      if (!sameCor) parts.push(`C: ${fmt(dCor)}`);
+      if (!samePin) parts.push(`P: ${f(dPin)}`);
+      if (!sameCor) parts.push(`C: ${f(dCor)}`);
       diffCell = badge('warn', `⚠️ ${parts.join(' | ')}`);
     }
     return `<tr>
       <td class="td-param">${r.name}</td>
       <td class="td-formula">${r.formula}</td>
-      <td>${fmt(aPin)}</td>
-      <td>${fmt(aCor)}</td>
-      <td>${fmt(bPin)}</td>
-      <td>${fmt(bCor)}</td>
+      <td>${f(aPin)}</td>
+      <td>${f(aCor)}</td>
+      <td>${f(bPin)}</td>
+      <td>${f(bCor)}</td>
       <td>${diffCell}</td>
     </tr>`;
   }).join('');
@@ -1031,8 +1036,8 @@ function renderScenarios() {
             onclick="loadScenarioToInputs(${i})" title="Click para cargar en los controles">
           ${escapeHtml(s.name)}${s.hasB ? ' <span class="system-tag sys-b" style="font-size:0.68rem;vertical-align:middle;">+B</span>' : ''}
         </td>
-        <td><span class="system-tag sys-a" style="font-size:0.68rem;">A</span> ${fmt(s.m1)}</td>
-        <td><span class="system-tag sys-a" style="font-size:0.68rem;">A</span> ${fmt(s.m2)}</td>
+        <td><span class="system-tag sys-a" style="font-size:0.68rem;">A</span> ${fmt3(s.m1)}</td>
+        <td><span class="system-tag sys-a" style="font-size:0.68rem;">A</span> ${fmt3(s.m2)}</td>
         <td>${s.z1}</td>
         <td>${s.z2}</td>
         <td>${fmt(g1.dp)}</td>
@@ -1063,8 +1068,8 @@ function renderScenarios() {
       const compatCellB = mEqB ? badge('ok','✅ Compatible') : badge('err','❌ Incompatible');
       rows += `
       <tr style="background:var(--success-bg);">
-        <td><span class="system-tag sys-b" style="font-size:0.68rem;">B</span> ${fmt(s.m1B)}</td>
-        <td><span class="system-tag sys-b" style="font-size:0.68rem;">B</span> ${fmt(s.m2B)}</td>
+        <td><span class="system-tag sys-b" style="font-size:0.68rem;">B</span> ${fmt3(s.m1B)}</td>
+        <td><span class="system-tag sys-b" style="font-size:0.68rem;">B</span> ${fmt3(s.m2B)}</td>
         <td>${s.z1B}</td>
         <td>${s.z2B}</td>
         <td>${fmt(gB1.dp)}</td>
@@ -1131,7 +1136,7 @@ function renderDetailComparison() {
   // Filas: parámetros para piñón y corona + globales
   const sections = [
     { title: 'PIÑÓN',  rows: [
-      ['Módulo (m₁)',        d => fmt(d.g1.m)],
+      ['Módulo (m₁)',        d => fmt3(d.g1.m)],
       ['Dientes (Z₁)',       d => d.g1.z],
       ['Diám. Primitivo DP₁', d => fmt(d.g1.dp)],
       ['Paso Circular p₁',   d => fmt(d.g1.p)],
@@ -1141,7 +1146,7 @@ function renderDetailComparison() {
       ['Diám. Raíz Dr',      d => fmt(d.g1.dr)],
     ]},
     { title: 'CORONA', rows: [
-      ['Módulo (m₂)',        d => fmt(d.g2.m)],
+      ['Módulo (m₂)',        d => fmt3(d.g2.m)],
       ['Dientes (Z₂)',       d => d.g2.z],
       ['Diám. Primitivo DP₂', d => fmt(d.g2.dp)],
       ['Paso Circular p₂',   d => fmt(d.g2.p)],
@@ -1154,8 +1159,8 @@ function renderDetailComparison() {
       ['Δ Módulo |m₁−m₂|',         d => {
         const x = Math.abs(d.g1.m - d.g2.m);
         return x < 0.001
-          ? `<span style="color:var(--success);font-weight:700;">${fmt(x)}</span>`
-          : `<span style="color:var(--danger);font-weight:700;">${fmt(x)}</span>`;
+          ? `<span style="color:var(--success);font-weight:700;">${fmt3(x)}</span>`
+          : `<span style="color:var(--danger);font-weight:700;">${fmt3(x)}</span>`;
       }],
       ['Δ Paso Circular |p₁−p₂|',  d => {
         const x = Math.abs(d.g1.p - d.g2.p);
